@@ -1,0 +1,39 @@
+import { mockAlerts } from "../../data/mockData";
+
+function AlertsPanel() {
+  return (
+    <section className="db-alerts-panel">
+      <div className="db-alerts-header">
+        <div>
+          <h3 className="db-alerts-title">Recent Alerts</h3>
+          <p className="db-alerts-sub">AI-generated spending warnings</p>
+        </div>
+        <span className="db-alerts-count">{mockAlerts.length} active</span>
+      </div>
+
+      <ul className="db-alerts-list">
+        {mockAlerts.map((alert, i) => (
+          <li
+            key={alert.id}
+            className={`db-alert-item db-alert-item--${alert.type}`}
+            style={{ animationDelay: `${i * 0.07}s` }}
+          >
+            <span className="db-alert-icon">{alert.icon}</span>
+            <div className="db-alert-body">
+              <p className="db-alert-name">{alert.user}</p>
+              <p className="db-alert-msg">{alert.message}</p>
+            </div>
+            <div className="db-alert-right">
+              <span className={`db-alert-badge db-alert-badge--${alert.type}`}>
+                {alert.type}
+              </span>
+              <span className="db-alert-time">{alert.time}</span>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+export default AlertsPanel;

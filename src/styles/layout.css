@@ -1,0 +1,200 @@
+/* ============================================================
+   SpendWise AI — layout.css
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap');
+
+:root {
+  --sw-navy:   #1A2B47;
+  --sw-teal:   #2DD4BF;
+  --sw-indigo: #6366F1;
+  --sw-amber:  #F59E0B;
+  --sw-slate:  #F8FAFC;
+  --font-heading: 'Sora', sans-serif;
+  --font-body:    'DM Sans', sans-serif;
+  --sidebar-w:    240px;
+}
+
+/* ── Shell ── */
+.admin-layout {
+  display: flex;
+  min-height: 100vh;
+  background: var(--sw-slate);
+  font-family: var(--font-body);
+}
+
+.admin-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.admin-content {
+  flex: 1;
+  padding: 2rem;
+  overflow-y: auto;
+}
+
+/* ── Sidebar ── */
+.sidebar {
+  width: var(--sidebar-w);
+  flex-shrink: 0;
+  background: var(--sw-navy);
+  display: flex;
+  flex-direction: column;
+  padding: 1.75rem 1.25rem;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+/* Brand */
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 2.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.sidebar-brand-icon {
+  width: 38px; height: 38px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--sw-teal), var(--sw-indigo));
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.sidebar-brand-icon svg { width: 20px; height: 20px; }
+
+.sidebar-brand-name {
+  font-family: var(--font-heading);
+  font-size: 0.95rem; font-weight: 700;
+  color: #fff; margin: 0; line-height: 1.2;
+}
+.sidebar-brand-name span { color: var(--sw-teal); }
+.sidebar-brand-sub {
+  font-size: 0.68rem; color: rgba(255,255,255,0.35);
+  margin: 0;
+}
+
+/* Nav */
+.sidebar-nav { flex: 1; }
+
+.sidebar-nav-label {
+  font-size: 0.65rem; font-weight: 600;
+  color: rgba(255,255,255,0.3);
+  text-transform: uppercase; letter-spacing: 0.1em;
+  margin-bottom: 0.75rem; padding: 0 0.5rem;
+  font-family: var(--font-heading);
+}
+
+.sidebar-nav-item {
+  display: flex; align-items: center; gap: 0.75rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 10px;
+  color: rgba(255,255,255,0.55);
+  font-size: 0.85rem; font-weight: 500;
+  text-decoration: none;
+  margin-bottom: 0.25rem;
+  transition: background 0.2s, color 0.2s;
+}
+.sidebar-nav-item:hover {
+  background: rgba(255,255,255,0.07);
+  color: #fff;
+}
+.sidebar-nav-item--active {
+  background: rgba(45,212,191,0.15);
+  color: var(--sw-teal) !important;
+  font-weight: 600;
+}
+.sidebar-nav-icon { font-size: 1rem; width: 20px; text-align: center; }
+
+/* Footer */
+.sidebar-footer {
+  border-top: 1px solid rgba(255,255,255,0.08);
+  padding-top: 1.25rem;
+}
+.sidebar-user {
+  display: flex; align-items: center; gap: 0.75rem;
+  margin-bottom: 0.875rem;
+}
+.sidebar-avatar {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--sw-teal), var(--sw-indigo));
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-heading); font-size: 0.85rem;
+  font-weight: 700; color: #fff; flex-shrink: 0;
+}
+.sidebar-user-name {
+  font-size: 0.82rem; font-weight: 600; color: #fff; margin: 0;
+}
+.sidebar-user-role {
+  font-size: 0.7rem; color: rgba(255,255,255,0.35); margin: 0;
+}
+.sidebar-logout {
+  display: flex; align-items: center; gap: 0.5rem;
+  font-size: 0.78rem; color: rgba(255,255,255,0.4);
+  text-decoration: none; padding: 0.5rem 0.75rem;
+  border-radius: 8px; transition: all 0.2s;
+  width: 100%;
+}
+.sidebar-logout:hover {
+  background: rgba(239,68,68,0.12);
+  color: #fca5a5;
+}
+
+/* ── Top Header ── */
+.admin-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1rem 2rem;
+  background: #fff;
+  border-bottom: 1px solid #e2e8f0;
+  position: sticky; top: 0; z-index: 50;
+}
+
+.admin-header-search {
+  display: flex; align-items: center; gap: 0.5rem;
+  background: var(--sw-slate); border: 1.5px solid #e2e8f0;
+  border-radius: 10px; padding: 0.5rem 0.875rem;
+  width: 280px; transition: border-color 0.2s;
+}
+.admin-header-search:focus-within {
+  border-color: var(--sw-teal);
+  box-shadow: 0 0 0 3px rgba(45,212,191,0.12);
+}
+.admin-header-search svg { color: #94a3b8; flex-shrink: 0; }
+.admin-header-search input {
+  border: none; background: transparent; outline: none;
+  font-size: 0.84rem; font-family: var(--font-body);
+  color: var(--sw-navy); width: 100%;
+}
+.admin-header-search input::placeholder { color: #cbd5e1; }
+
+.admin-header-right {
+  display: flex; align-items: center; gap: 0.875rem;
+}
+
+.admin-header-notif {
+  position: relative; background: var(--sw-slate);
+  border: 1.5px solid #e2e8f0; border-radius: 10px;
+  width: 38px; height: 38px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 0.95rem; transition: border-color 0.2s;
+}
+.admin-header-notif:hover { border-color: var(--sw-teal); }
+.admin-notif-dot {
+  position: absolute; top: 6px; right: 6px;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--sw-amber); border: 2px solid #fff;
+}
+
+.admin-header-avatar {
+  width: 38px; height: 38px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--sw-teal), var(--sw-indigo));
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-heading); font-size: 0.88rem;
+  font-weight: 700; color: #fff; cursor: pointer;
+}

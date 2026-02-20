@@ -1,0 +1,186 @@
+/* ============================================================
+   SpendWise AI — mlinsights.css
+   ============================================================ */
+
+/* ── Header ── */
+.ml-header {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  margin-bottom: 1.75rem;
+}
+.ml-header-sub  { font-size: 0.75rem; color: #94a3b8; margin-bottom: 0.2rem; }
+.ml-header-title {
+  font-family: var(--font-heading); font-size: 1.6rem; font-weight: 700;
+  color: var(--sw-navy); letter-spacing: -0.02em; margin: 0;
+}
+.ml-model-tag {
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(45,212,191,0.1); border: 1px solid rgba(45,212,191,0.25);
+  color: #0d9488; font-size: 0.75rem; font-family: var(--font-heading);
+  font-weight: 500; padding: 6px 14px; border-radius: 20px;
+}
+.ml-model-dot {
+  width: 7px; height: 7px; border-radius: 50%; background: #2DD4BF;
+  animation: mlPulse 2s ease-in-out infinite;
+}
+@keyframes mlPulse {
+  0%,100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.5; transform: scale(1.4); }
+}
+
+/* ── ML Metric Cards ── */
+.ml-metrics-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 1.25rem; margin-bottom: 1.75rem;
+}
+.ml-metric-card {
+  background: #fff; border-radius: 14px; padding: 1.25rem 1.4rem;
+  border: 1.5px solid #f1f5f9; position: relative; overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
+  animation: mlCardIn 0.5s cubic-bezier(0.16,1,0.3,1) both;
+}
+.ml-metric-card:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(26,43,71,0.1); }
+@keyframes mlCardIn {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.ml-metric-glow {
+  position: absolute; bottom: -20px; right: -20px;
+  width: 80px; height: 80px; border-radius: 50%; opacity: 0.06; filter: blur(20px);
+}
+.ml-metric-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem; }
+.ml-metric-label { font-size: 0.76rem; color: #94a3b8; font-family: var(--font-heading); font-weight: 500; margin: 0; }
+.ml-metric-trend { font-size: 0.72rem; font-weight: 600; font-family: var(--font-heading); }
+.ml-metric-value { font-family: var(--font-heading); font-size: 1.7rem; font-weight: 800; margin: 0 0 0.25rem; letter-spacing: -0.02em; }
+.ml-metric-sub   { font-size: 0.72rem; color: #94a3b8; margin: 0; }
+
+/* ── Main Grid ── */
+.ml-main-grid {
+  display: grid; grid-template-columns: 1.5fr 1fr;
+  gap: 1.25rem; margin-bottom: 1.75rem;
+}
+
+/* Chart Box */
+.ml-chart-box, .ml-flagged-box {
+  background: #fff; border-radius: 14px;
+  padding: 1.5rem; border: 1.5px solid #f1f5f9;
+}
+.ml-chart-header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+.ml-chart-title { font-family: var(--font-heading); font-size: 0.95rem; font-weight: 700; color: var(--sw-navy); margin: 0 0 3px; }
+.ml-chart-sub   { font-size: 0.74rem; color: #94a3b8; margin: 0; }
+
+.ml-legend { display: flex; gap: 0.75rem; align-items: center; }
+.ml-legend-item {
+  font-size: 0.72rem; font-family: var(--font-heading); font-weight: 500;
+  padding: 3px 10px; border-radius: 20px;
+}
+.ml-legend-item--actual    { background: rgba(45,212,191,0.12);  color: #0d9488; }
+.ml-legend-item--predicted { background: rgba(99,102,241,0.12);  color: #4338ca; }
+
+/* Prediction Bar Chart */
+.ml-bar-chart {
+  display: flex; align-items: flex-end; gap: 0.5rem; height: 160px;
+}
+.ml-bar-group {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px;
+  animation: mlBarIn 0.5s cubic-bezier(0.16,1,0.3,1) both;
+  position: relative;
+}
+@keyframes mlBarIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.ml-bar-pair {
+  display: flex; gap: 3px; align-items: flex-end; width: 100%;
+  height: 130px;
+}
+.ml-bar-col { flex: 1; display: flex; align-items: flex-end; height: 100%; }
+.ml-bar {
+  width: 100%; border-radius: 4px 4px 0 0;
+  transition: height 0.8s cubic-bezier(0.16,1,0.3,1);
+  animation: mlBarGrow 0.8s cubic-bezier(0.16,1,0.3,1) both;
+}
+@keyframes mlBarGrow { from { height: 0 !important; } }
+.ml-bar--actual    { background: linear-gradient(180deg, #2DD4BF, #0d9488); }
+.ml-bar--predicted { background: linear-gradient(180deg, #6366F1, #4338ca); opacity: 0.75; }
+.ml-bar--forecast  { opacity: 0.45; border: 2px dashed #6366F1; background: rgba(99,102,241,0.1) !important; }
+.ml-bar-label      { font-size: 0.68rem; color: #94a3b8; font-family: var(--font-heading); font-weight: 500; }
+.ml-bar-forecast-tag {
+  font-size: 0.6rem; color: var(--sw-indigo); background: rgba(99,102,241,0.1);
+  padding: 1px 5px; border-radius: 4px; font-family: var(--font-heading); font-weight: 600;
+}
+
+/* Flagged List */
+.ml-flagged-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.875rem; }
+.ml-flagged-item {
+  display: flex; align-items: center; gap: 0.75rem;
+  padding: 0.875rem; background: var(--sw-slate); border-radius: 10px;
+  animation: mlFlagIn 0.4s cubic-bezier(0.16,1,0.3,1) both;
+  background: transparent !important; border: 1.5px solid #f1f5f9 !important;
+  box-shadow: none !important;
+}
+@keyframes mlFlagIn { from { opacity:0; transform:translateX(8px); } to { opacity:1; transform:translateX(0); } }
+.ml-flagged-rank {
+  font-family: var(--font-heading); font-size: 0.72rem; font-weight: 700;
+  color: #94a3b8; width: 20px; text-align: center; flex-shrink: 0;
+}
+.ml-flagged-avatar {
+  width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+  background: linear-gradient(135deg, #ef4444, #F59E0B);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-heading); font-size: 0.72rem; font-weight: 700; color: #fff;
+}
+.ml-flagged-info { flex: 1; min-width: 0; }
+.ml-flagged-name   { font-family: var(--font-heading); font-size: 0.82rem; font-weight: 600; color: var(--sw-navy); margin: 0 0 2px; }
+.ml-flagged-reason { font-size: 0.7rem; color: #94a3b8; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ml-risk-score-wrap { position: relative; width: 40px; height: 40px; flex-shrink: 0; }
+.ml-risk-ring { width: 40px; height: 40px; transform: rotate(-90deg); }
+.ml-risk-num {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-heading); font-size: 0.68rem; font-weight: 800;
+}
+
+/* ── Behavioral Patterns ── */
+.ml-patterns-box {
+  background: #fff; border-radius: 14px;
+  padding: 1.5rem; border: 1.5px solid #f1f5f9;
+}
+.ml-pattern-total {
+  font-size: 0.72rem; background: rgba(99,102,241,0.1); color: var(--sw-indigo);
+  padding: 3px 10px; border-radius: 20px; font-family: var(--font-heading); font-weight: 500;
+}
+.ml-patterns-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+.ml-pattern-card {
+  background: var(--sw-slate); border-radius: 10px; padding: 1rem 1.1rem;
+  border: 1.5px solid #f1f5f9; transition: transform 0.2s;
+  animation: mlCardIn 0.5s cubic-bezier(0.16,1,0.3,1) both;
+}
+.ml-pattern-card:hover { transform: translateY(-2px); }
+.ml-pattern-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.625rem; }
+.ml-risk-badge {
+  font-size: 0.65rem; font-weight: 600; font-family: var(--font-heading);
+  padding: 2px 8px; border-radius: 20px;
+}
+.ml-pattern-affected { font-size: 0.7rem; color: #94a3b8; font-family: var(--font-heading); font-weight: 500; }
+.ml-pattern-name { font-family: var(--font-heading); font-size: 0.84rem; font-weight: 700; color: var(--sw-navy); margin: 0 0 0.3rem; }
+.ml-pattern-desc { font-size: 0.74rem; color: #64748b; margin: 0 0 0.75rem; line-height: 1.4; }
+.ml-pattern-bar { height: 4px; background: #e2e8f0; border-radius: 99px; overflow: hidden; }
+.ml-pattern-bar-fill { height: 100%; border-radius: 99px; transition: width 1s ease; }
+
+/* ── Responsive ── */
+@media (max-width: 1100px) {
+  .ml-metrics-grid  { grid-template-columns: repeat(2, 1fr); }
+  .ml-main-grid     { grid-template-columns: 1fr; }
+  .ml-patterns-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 640px) {
+  .ml-patterns-grid { grid-template-columns: 1fr; }
+  .ml-metrics-grid  { grid-template-columns: 1fr 1fr; }
+}
+
+
