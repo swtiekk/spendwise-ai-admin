@@ -1,6 +1,6 @@
+import { useNavigate } from "react-router-dom";
 import { mockMetrics } from "../../data/mockData";
 
-// Clean SVG icons — no emoji rendering issues
 const icons = {
   users: (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -29,7 +29,17 @@ const icons = {
   ),
 };
 
+// Where each metric card navigates
+const metricLinks = {
+  users:    "/users",
+  activity: "/users",
+  spend:    "/reports",
+  brain:    "/ml-insights",
+};
+
 function MetricsGrid() {
+  const navigate = useNavigate();
+
   return (
     <section className="db-metrics-grid">
       {mockMetrics.map((metric, i) => (
@@ -39,10 +49,7 @@ function MetricsGrid() {
           style={{ animationDelay: `${i * 0.08}s` }}
         >
           <div className="db-metric-top">
-            <span
-              className="db-metric-icon"
-              style={{ color: metric.color }}
-            >
+            <span className="db-metric-icon" style={{ color: metric.color }}>
               {icons[metric.icon]}
             </span>
             <span className={`db-metric-badge db-metric-badge--${metric.trend}`}>
@@ -57,6 +64,15 @@ function MetricsGrid() {
               style={{ width: metric.fill, background: metric.color }}
             />
           </div>
+          <button
+            className="db-viewmore-btn"
+            onClick={() => navigate(metricLinks[metric.icon])}
+          >
+            View More
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+          </button>
         </div>
       ))}
     </section>
