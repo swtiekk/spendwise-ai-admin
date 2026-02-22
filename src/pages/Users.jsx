@@ -11,7 +11,7 @@ const statusConfig = {
 
 const scoreColor = (s) => s >= 80 ? "#2DD4BF" : s >= 50 ? "#F59E0B" : "#ef4444";
 
-function UserDetailModal({ user, onClose }) {
+function UserDetailModal({ user, onClose, onDeactivate }) {
   if (!user) return null;
   return (
     <div className="u-modal-overlay" onClick={onClose}>
@@ -28,6 +28,14 @@ function UserDetailModal({ user, onClose }) {
             </span>
           </div>
         </div>
+
+        <button
+  className="u-view-btn"
+  style={{ marginTop: "1rem" }}
+  onClick={() => onDeactivate(user.id)}
+>
+  Deactivate Account
+</button>
 
         <div className="u-modal-score-row">
           <div className="u-modal-score-wrap">
@@ -64,9 +72,13 @@ function UserDetailModal({ user, onClose }) {
         </div>
 
         <div className="u-modal-bio">
-          <p className="u-modal-bio-label">AI Assessment</p>
-          <p className="u-modal-bio-text">🧠 {user.bio}</p>
-        </div>
+  <p className="u-modal-bio-label">Transaction Summary</p>
+  <p>Total Transactions: {user.transactions}</p>
+  <p>
+    Avg per Transaction: ₱
+    {(user.spent / user.transactions).toFixed(2)}
+  </p>
+</div>
       </div>
     </div>
   );
@@ -77,7 +89,44 @@ function Users() {
   const [filter, setFilter]       = useState("all");
   const [selected, setSelected]   = useState(null);
 
-  const filtered = mockUsers.filter((u) => {
+  const [users, setUsers] = useState(mockUsers); /*1*/
+  const deactivateUser = (id) => {
+  const updated = users.map((u) =>
+    u.id === id ? { ...u, status: "flagged" } : u
+  );
+  setUsers(updated);
+  setSelected(null);
+};
+
+const exportCSV = () => {
+  const headers = ["UserID", "Income", "Spent", "Savings", "Score", "Alerts"];
+
+  const rows = users.map((u) => [
+    u.id,
+    u.income,
+    u.spent,
+    u.savings,
+    u.spendingScore,
+    u.alerts,
+  ]);
+
+  const csv =
+    "data:text/csv;charset=utf-8," +
+    [headers, ...rows].map((e) => e.join(",")).join("\n");
+
+  const link = document.createElement("a");
+  link.href = encodeURI(csv);
+  link.download = "users_report.csv";
+  link.click();
+};
+
+const refreshDataset = () => {
+  alert("Dataset refreshed. ML retraining started.");
+};
+
+
+  const filtered = users.filter((u) => { 
+
     const matchSearch = u.name.toLowerCase().includes(search.toLowerCase()) ||
                         u.email.toLowerCase().includes(search.toLowerCase());
     const matchFilter = filter === "all" || u.status === filter;
@@ -108,6 +157,14 @@ function Users() {
           <div className="u-stat-pill u-stat-pill--red">
             <span>{counts.flagged}</span> Flagged
           </div>
+          <button className="u-view-btn" onClick={exportCSV}>
+       Export CSV
+   </button>
+
+<button className="u-view-btn" onClick={refreshDataset}>
+  Refresh Dataset
+</button>
+
         </div>
       </section>
 
@@ -166,8 +223,8 @@ function Users() {
                     <div className="u-user-cell">
                       <div className="u-avatar">{u.avatar}</div>
                       <div>
-                        <p className="u-name">{u.name}</p>
-                        <p className="u-email">{u.email}</p>
+                        <p className="u-name">ID: {u.id}</p>
+<p className="u-email">Anonymized User</p>
                       </div>
                     </div>
                   </td>
@@ -207,7 +264,11 @@ function Users() {
 
       <p className="u-table-footer">Showing {filtered.length} of {mockUsers.length} users</p>
 
-      <UserDetailModal user={selected} onClose={() => setSelected(null)} />
+      <UserDetailModal
+  user={selected}
+  onClose={() => setSelected(null)}
+  onDeactivate={deactivateUser}
+/>
     </AdminLayout>
   );
 }
