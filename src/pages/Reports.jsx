@@ -2,184 +2,347 @@ import { useState } from "react";
 import AdminLayout from "../components/layout/AdminLayout";
 import { mockMonthlySummary, mockSpendingData } from "../data/mockData";
 import "../styles/reports.css";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+
+const MONTH_MAP = {
+  "Sep": "2025-09",
+  "Oct": "2025-10",
+  "Nov": "2025-11",
+  "Dec": "2025-12",
+  "Jan": "2026-01",
+  "Feb": "2026-02",
+};
 
 function Reports() {
   const [dateFrom, setDateFrom] = useState("2025-09");
   const [dateTo,   setDateTo]   = useState("2026-02");
   const [exported, setExported] = useState(false);
+  const [exportMsg, setExportMsg] = useState("");
+  const [filteredData, setFilteredData] = useState(mockMonthlySummary);
+  const [filteredChart, setFilteredChart] = useState(mockSpendingData);
+  const [hasGenerated, setHasGenerated] = useState(false);
 
-  // Filter summary by date range
-  const monthOrder = mockMonthlySummary.map((r) => r.month);
-  const filtered = mockMonthlySummary.filter((r) => {
-    const idx = monthOrder.indexOf(r.month);
-    const fromIdx = monthOrder.findIndex((m) => m.includes(dateFrom.split("-")[0]) && m.includes(
-      new Date(dateFrom + "-01").toLocaleString("en-US", { month: "short" })
-    ));
-    return true; // show all for demo
-  });
+  const generateReport = () => {
+    const from = dateFrom;
+    const to   = dateTo;
 
-  // Summary totals
-  const totalSpend   = "₱44,649,200";
-  const totalUsers   = 1284;
-  const totalAlerts  = 1574;
-  const totalSavings = "₱6,880,000";
+    const resultTable = mockMonthlySummary.filter((row) => {
+      const d = new Date(row.month);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      return key >= from && key <= to;
+    });
+    setFilteredData(resultTable.length > 0 ? resultTable : mockMonthlySummary);
 
-  const handleExport = (type) => {
-    setExported(true);
-    setTimeout(() => setExported(false), 2500);
+    const resultChart = mockSpendingData.filter((d) => {
+      const key = MONTH_MAP[d.month];
+      if (!key) return false;
+      return key >= from && key <= to;
+    });
+    setFilteredChart(resultChart.length > 0 ? resultChart : mockSpendingData);
+    setHasGenerated(true);
   };
 
-  const maxSpend = Math.max(...mockSpendingData.map((d) => d.amount));
+  const totalSpendNum = filteredData.reduce((sum, r) => {
+    const num = parseFloat(String(r.totalSpend).replace(/[^0-9.]/g, ""));
+    return sum + (isNaN(num) ? 0 : num);
+  }, 0);
+  const totalUsers      = filteredData.reduce((sum, r) => sum + (r.users  || 0), 0);
+  const totalAlerts     = filteredData.reduce((sum, r) => sum + (r.alerts || 0), 0);
+  const totalSavingsNum = filteredData.reduce((sum, r) => {
+    const num = parseFloat(String(r.savings).replace(/[^0-9.]/g, ""));
+    return sum + (isNaN(num) ? 0 : num);
+  }, 0);
+
+  const handleExportCSV = () => {
+    const headers = ["Month","Active Users","Total Spend","Avg / User","AI Alerts","Total Savings","Top Category"];
+    const rows = filteredData.map((r) => [r.month,r.users,r.totalSpend,r.avgSpend,r.alerts,r.savings,r.topCategory]);
+    const csv = [headers,...rows].map((row) => row.map((c) => `"${String(c).replace(/"/g,'""')}"`).join(",")).join("\n");
+    const blob = new Blob([csv],{type:"text/csv;charset=utf-8;"});
+    const url  = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href=url; link.download=`SpendWise_Report_${dateFrom}_to_${dateTo}.csv`;
+    document.body.appendChild(link); link.click(); document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    setExportMsg("✓ CSV downloaded!"); setExported(true); setTimeout(()=>setExported(false),2500);
+  };
+
+  const handleExportPDF = () => {
+    const doc = new jsPDF({orientation:"landscape",unit:"pt",format:"a4"});
+    doc.setFontSize(18); doc.setTextColor(15,23,42);
+    doc.text("SpendWise AI - Monthly Report",40,40);
+    doc.setFontSize(10); doc.setTextColor(100,116,139);
+    doc.text("Analytics & Export",40,58);
+    doc.text(`Period: ${dateFrom}  ->  ${dateTo}`,40,72);
+    const kpis=[
+      {label:"TOTAL SPENDING",value:"P"+totalSpendNum.toLocaleString()},
+      {label:"TOTAL USERS",value:totalUsers.toLocaleString()},
+      {label:"TOTAL ALERTS",value:totalAlerts.toLocaleString()},
+      {label:"TOTAL SAVINGS",value:"P"+totalSavingsNum.toLocaleString()},
+    ];
+    const boxW=170,boxH=48,startX=40,startY=88,gap=12;
+    kpis.forEach((k,i)=>{
+      const x=startX+i*(boxW+gap);
+      doc.setDrawColor(226,232,240); doc.setFillColor(248,250,252);
+      doc.roundedRect(x,startY,boxW,boxH,4,4,"FD");
+      doc.setFontSize(8); doc.setTextColor(148,163,184); doc.text(k.label,x+12,startY+16);
+      doc.setFontSize(16); doc.setTextColor(15,23,42); doc.text(k.value,x+12,startY+36);
+    });
+    doc.setFontSize(12); doc.setTextColor(15,23,42); doc.text("Monthly Summary Breakdown",40,158);
+    autoTable(doc,{
+      startY:166,
+      head:[["Month","Active Users","Total Spend","Avg / User","AI Alerts","Total Savings","Top Category"]],
+      body:filteredData.map((r)=>[r.month,r.users.toLocaleString(),r.totalSpend,r.avgSpend,r.alerts,r.savings,r.topCategory]),
+      headStyles:{fillColor:[241,245,249],textColor:[71,85,105],fontSize:9,fontStyle:"bold"},
+      bodyStyles:{fontSize:10,textColor:[30,41,59]},
+      alternateRowStyles:{fillColor:[248,250,252]},
+      styles:{cellPadding:8},margin:{left:40,right:40},
+    });
+    const pageH=doc.internal.pageSize.getHeight();
+    doc.setFontSize(9); doc.setTextColor(148,163,184);
+    doc.text(`Generated by SpendWise AI Admin Panel  •  ${new Date().toLocaleDateString("en-PH",{year:"numeric",month:"long",day:"numeric"})}`,40,pageH-20);
+    doc.save(`SpendWise_Report_${dateFrom}_to_${dateTo}.pdf`);
+    setExportMsg("✓ PDF downloaded!"); setExported(true); setTimeout(()=>setExported(false),2500);
+  };
+
+  const maxSpend = Math.max(...filteredChart.map((d) => d.amount));
+  const categories = [
+    {label:"Food & Dining",pct:35,color:"#2DD4BF"},
+    {label:"Transportation",pct:20,color:"#6366F1"},
+    {label:"Entertainment",pct:18,color:"#F59E0B"},
+    {label:"Shopping",pct:15,color:"#1e293b"},
+    {label:"Bills & Utilities",pct:12,color:"#94a3b8"},
+  ];
 
   return (
     <AdminLayout>
-      <section className="rp-header">
-        <div>
-          <p className="rp-header-sub">Analytics & Export</p>
-          <h2 className="rp-header-title">Reports</h2>
-        </div>
-        <div className="rp-export-group">
-          {exported && <span className="rp-export-toast">✓ Exported successfully!</span>}
-          <button className="rp-export-btn rp-export-btn--csv" onClick={() => handleExport("csv")}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
-            </svg>
-            Export CSV
-          </button>
-          <button className="rp-export-btn rp-export-btn--pdf" onClick={() => handleExport("pdf")}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
-            </svg>
-            Export PDF
-          </button>
-        </div>
-      </section>
+      <div style={styles.page}>
 
-      {/* Summary KPI row */}
-      <div className="rp-kpi-row">
-        {[
-          { label: "Total Spending",  value: totalSpend,              color: "#2DD4BF", icon: "₱" },
-          { label: "Total Users",     value: totalUsers.toLocaleString(), color: "#6366F1", icon: "👥" },
-          { label: "Total Alerts",    value: totalAlerts.toLocaleString(),color: "#F59E0B", icon: "🔔" },
-          { label: "Total Savings",   value: totalSavings,            color: "#1A2B47", icon: "💰" },
-        ].map((k, i) => (
-          <div className="rp-kpi-card" key={k.label} style={{ animationDelay: `${i * 0.07}s` }}>
-            <div className="rp-kpi-icon" style={{ color: k.color }}>{k.icon}</div>
-            <p className="rp-kpi-value" style={{ color: k.color }}>{k.value}</p>
-            <p className="rp-kpi-label">{k.label}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* Date Filter */}
-      <div className="rp-filter-bar">
-        <div className="rp-filter-group">
-          <label>From</label>
-          <input type="month" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
-        </div>
-        <div className="rp-filter-divider">→</div>
-        <div className="rp-filter-group">
-          <label>To</label>
-          <input type="month" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
-        </div>
-        <button className="rp-filter-apply">Apply Filter</button>
-      </div>
-
-      {/* Chart + Table row */}
-      <div className="rp-content-grid">
-
-        {/* Trend Chart */}
-        <div className="rp-chart-box">
-          <div className="rp-chart-header">
-            <h3 className="rp-chart-title">Monthly Spending Trend</h3>
-            <p className="rp-chart-sub">Total platform spend per month</p>
-          </div>
-          <div className="rp-trend-chart">
-            {mockSpendingData.map((d, i) => (
-              <div key={d.month} className="rp-trend-col" style={{ animationDelay: `${i * 0.07}s` }}>
-                <span className="rp-trend-val">₱{(d.amount / 1000).toFixed(0)}k</span>
-                <div className="rp-trend-track">
-                  <div
-                    className="rp-trend-fill"
-                    style={{ height: `${(d.amount / maxSpend) * 100}%` }}
-                  />
-                </div>
-                <span className="rp-trend-label">{d.month}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Top categories summary */}
-        <div className="rp-chart-box">
-          <div className="rp-chart-header">
-            <h3 className="rp-chart-title">Top Spending Categories</h3>
-            <p className="rp-chart-sub">Platform-wide category distribution</p>
-          </div>
-          <ul className="rp-cat-list">
-            {[
-              { label: "Food & Dining",     pct: 35, color: "#2DD4BF" },
-              { label: "Transportation",    pct: 20, color: "#6366F1" },
-              { label: "Entertainment",     pct: 18, color: "#F59E0B" },
-              { label: "Shopping",          pct: 15, color: "#1A2B47" },
-              { label: "Bills & Utilities", pct: 12, color: "#94a3b8" },
-            ].map((c) => (
-              <li key={c.label} className="rp-cat-item">
-                <div className="rp-cat-label-row">
-                  <span className="rp-cat-dot" style={{ background: c.color }} />
-                  <span className="rp-cat-name">{c.label}</span>
-                  <span className="rp-cat-pct">{c.pct}%</span>
-                </div>
-                <div className="rp-cat-bar">
-                  <div style={{ width: `${c.pct}%`, background: c.color }} className="rp-cat-bar-fill" />
-                </div>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
-
-      {/* Monthly Summary Table */}
-      <div className="rp-table-wrap">
-        <div className="rp-table-header">
+        {/* ── Page Header ── */}
+        <div style={styles.pageHeader}>
           <div>
-            <h3 className="rp-chart-title">Monthly Summary</h3>
-            <p className="rp-chart-sub">Detailed breakdown per month</p>
+            <p style={styles.pageEyebrow}>Analytics & Export</p>
+            <h2 style={styles.pageTitle}>Reports</h2>
+          </div>
+          <div style={styles.exportRow}>
+            {exported && <span style={styles.toast}>{exportMsg}</span>}
+            <button style={{...styles.btn, ...styles.btnOutline}} onClick={handleExportCSV}>
+              <DownloadIcon /> Export CSV
+            </button>
+            <button style={{...styles.btn, ...styles.btnDark}} onClick={handleExportPDF}>
+              <FileIcon /> Export PDF
+            </button>
           </div>
         </div>
-        <table className="rp-table">
-          <thead>
-            <tr>
-              <th>Month</th>
-              <th>Active Users</th>
-              <th>Total Spend</th>
-              <th>Avg / User</th>
-              <th>AI Alerts</th>
-              <th>Total Savings</th>
-              <th>Top Category</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((row, i) => (
-              <tr key={row.month} className="rp-table-row" style={{ animationDelay: `${i * 0.05}s` }}>
-                <td className="rp-month-cell">{row.month}</td>
-                <td>{row.users.toLocaleString()}</td>
-                <td className="rp-num">{row.totalSpend}</td>
-                <td className="rp-num">{row.avgSpend}</td>
-                <td>
-                  <span className={`rp-alert-badge ${row.alerts > 290 ? "rp-alert-badge--high" : row.alerts > 220 ? "rp-alert-badge--mid" : "rp-alert-badge--low"}`}>
-                    {row.alerts}
-                  </span>
-                </td>
-                <td className="rp-savings">{row.savings}</td>
-                <td><span className="rp-category-pill">{row.topCategory}</span></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+
+        {/* ── Filter Bar ── */}
+        <div style={styles.filterCard}>
+          <p style={styles.filterLabel}>Select Date Range</p>
+          <div style={styles.filterRow}>
+            <div style={styles.filterGroup}>
+              <label style={styles.inputLabel}>From</label>
+              <input type="month" value={dateFrom} onChange={(e)=>setDateFrom(e.target.value)} style={styles.input}/>
+            </div>
+            <span style={styles.arrow}>→</span>
+            <div style={styles.filterGroup}>
+              <label style={styles.inputLabel}>To</label>
+              <input type="month" value={dateTo} onChange={(e)=>setDateTo(e.target.value)} style={styles.input}/>
+            </div>
+            <button style={{...styles.btn, ...styles.btnPrimary}} onClick={generateReport}>
+              Generate Report
+            </button>
+          </div>
+          {hasGenerated && (
+            <p style={styles.filterHint}>
+              ✓ Showing data from <strong>{dateFrom}</strong> to <strong>{dateTo}</strong>
+            </p>
+          )}
+        </div>
+
+        {/* ── KPI Cards ── */}
+        <div style={styles.kpiGrid}>
+          {[
+            {label:"Total Spending", value:"₱"+totalSpendNum.toLocaleString(), icon:"₱", color:"#2DD4BF", bg:"#f0fdfb"},
+            {label:"Total Users",    value:totalUsers.toLocaleString(),         icon:"👥", color:"#6366F1", bg:"#f5f3ff"},
+            {label:"Total Alerts",   value:totalAlerts.toLocaleString(),        icon:"🔔", color:"#F59E0B", bg:"#fffbeb"},
+            {label:"Total Savings",  value:"₱"+totalSavingsNum.toLocaleString(),icon:"💰", color:"#10b981", bg:"#ecfdf5"},
+          ].map((k)=>(
+            <div key={k.label} style={{...styles.kpiCard, background: k.bg, borderColor: k.color+"33"}}>
+              <div style={{...styles.kpiIconBox, color: k.color}}>{k.icon}</div>
+              <p style={{...styles.kpiValue, color: k.color}}>{k.value}</p>
+              <p style={styles.kpiLabel}>{k.label}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* ── Charts Row ── */}
+        <div style={styles.chartsRow}>
+
+          {/* Bar Chart */}
+          <div style={styles.card}>
+            <div style={styles.cardHeader}>
+              <h3 style={styles.cardTitle}>Monthly Spending Trend</h3>
+              <p style={styles.cardSub}>Total platform spend per month</p>
+            </div>
+            <div style={styles.barChart}>
+              {filteredChart.map((d,i)=>(
+                <div key={d.month} style={styles.barCol}>
+                  <span style={styles.barVal}>₱{(d.amount/1000).toFixed(0)}k</span>
+                  <div style={styles.barTrack}>
+                    <div style={{
+                      ...styles.barFill,
+                      height:`${(d.amount/maxSpend)*100}%`,
+                      animationDelay:`${i*0.08}s`
+                    }}/>
+                  </div>
+                  <span style={styles.barLabel}>{d.month}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Category Chart */}
+          <div style={styles.card}>
+            <div style={styles.cardHeader}>
+              <h3 style={styles.cardTitle}>Top Spending Categories</h3>
+              <p style={styles.cardSub}>Platform-wide distribution</p>
+            </div>
+            <div style={styles.catList}>
+              {categories.map((c)=>(
+                <div key={c.label} style={styles.catItem}>
+                  <div style={styles.catRow}>
+                    <div style={{display:"flex",alignItems:"center",gap:8}}>
+                      <span style={{...styles.catDot, background:c.color}}/>
+                      <span style={styles.catName}>{c.label}</span>
+                    </div>
+                    <span style={styles.catPct}>{c.pct}%</span>
+                  </div>
+                  <div style={styles.catTrack}>
+                    <div style={{...styles.catFill, width:`${c.pct}%`, background:c.color}}/>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* ── Table ── */}
+        <div style={styles.card}>
+          <div style={styles.cardHeader}>
+            <div>
+              <h3 style={styles.cardTitle}>Monthly Summary</h3>
+              <p style={styles.cardSub}>Detailed breakdown per month — {filteredData.length} record{filteredData.length !== 1 ? "s" : ""} shown</p>
+            </div>
+          </div>
+          <div style={{overflowX:"auto"}}>
+            <table style={styles.table}>
+              <thead>
+                <tr>
+                  {["Month","Active Users","Total Spend","Avg / User","AI Alerts","Total Savings","Top Category"].map((h)=>(
+                    <th key={h} style={styles.th}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {filteredData.map((row,i)=>(
+                  <tr key={row.month} style={i%2===0?styles.trEven:styles.trOdd}>
+                    <td style={{...styles.td, fontWeight:600, color:"#1e293b"}}>{row.month}</td>
+                    <td style={styles.td}>{row.users.toLocaleString()}</td>
+                    <td style={{...styles.td, color:"#0f766e", fontWeight:600}}>{row.totalSpend}</td>
+                    <td style={styles.td}>{row.avgSpend}</td>
+                    <td style={styles.td}>
+                      <span style={{
+                        ...styles.badge,
+                        background: row.alerts>290?"#fef2f2":row.alerts>220?"#fffbeb":"#f0fdf4",
+                        color:       row.alerts>290?"#dc2626":row.alerts>220?"#d97706":"#16a34a",
+                      }}>{row.alerts}</span>
+                    </td>
+                    <td style={{...styles.td, color:"#059669", fontWeight:600}}>{row.savings}</td>
+                    <td style={styles.td}>
+                      <span style={styles.pill}>{row.topCategory}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
       </div>
     </AdminLayout>
   );
 }
+
+// ── Inline styles ──
+const styles = {
+  page:        { padding:"28px 32px", display:"flex", flexDirection:"column", gap:24, fontFamily:"'Segoe UI',sans-serif" },
+  pageHeader:  { display:"flex", justifyContent:"space-between", alignItems:"flex-end", flexWrap:"wrap", gap:12 },
+  pageEyebrow: { fontSize:12, color:"#94a3b8", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:4 },
+  pageTitle:   { fontSize:26, fontWeight:700, color:"#0f172a", margin:0 },
+  exportRow:   { display:"flex", alignItems:"center", gap:10 },
+  toast:       { fontSize:13, color:"#16a34a", background:"#f0fdf4", border:"1px solid #bbf7d0", borderRadius:6, padding:"6px 12px" },
+
+  btn:         { display:"flex", alignItems:"center", gap:6, padding:"9px 16px", borderRadius:8, fontSize:13, fontWeight:600, cursor:"pointer", border:"none", transition:"opacity 0.15s" },
+  btnOutline:  { background:"#fff", border:"1px solid #e2e8f0", color:"#334155" },
+  btnDark:     { background:"#1e293b", color:"#fff" },
+  btnPrimary:  { background:"#2DD4BF", color:"#fff", padding:"9px 22px" },
+
+  filterCard:  { background:"#fff", border:"1px solid #e2e8f0", borderRadius:12, padding:"20px 24px" },
+  filterLabel: { fontSize:12, fontWeight:600, color:"#94a3b8", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:14 },
+  filterRow:   { display:"flex", alignItems:"flex-end", gap:16, flexWrap:"wrap" },
+  filterGroup: { display:"flex", flexDirection:"column", gap:6 },
+  inputLabel:  { fontSize:12, color:"#64748b", fontWeight:500 },
+  input:       { padding:"8px 12px", border:"1px solid #e2e8f0", borderRadius:8, fontSize:14, color:"#1e293b", background:"#f8fafc", outline:"none" },
+  arrow:       { color:"#94a3b8", fontSize:18, paddingBottom:8 },
+  filterHint:  { marginTop:12, fontSize:13, color:"#64748b" },
+
+  kpiGrid:     { display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:16 },
+  kpiCard:     { borderRadius:12, border:"1px solid", padding:"20px", display:"flex", flexDirection:"column", gap:6 },
+  kpiIconBox:  { fontSize:22, marginBottom:2 },
+  kpiValue:    { fontSize:22, fontWeight:700, margin:0 },
+  kpiLabel:    { fontSize:12, color:"#94a3b8", margin:0, textTransform:"uppercase", letterSpacing:"0.05em" },
+
+  chartsRow:   { display:"grid", gridTemplateColumns:"1.4fr 1fr", gap:16 },
+  card:        { background:"#fff", border:"1px solid #e2e8f0", borderRadius:12, padding:"24px" },
+  cardHeader:  { marginBottom:20 },
+  cardTitle:   { fontSize:15, fontWeight:700, color:"#0f172a", margin:"0 0 4px" },
+  cardSub:     { fontSize:12, color:"#94a3b8", margin:0 },
+
+  barChart:    { display:"flex", alignItems:"flex-end", gap:10, height:160 },
+  barCol:      { flex:1, display:"flex", flexDirection:"column", alignItems:"center", gap:6, height:"100%" },
+  barVal:      { fontSize:11, color:"#64748b", fontWeight:500 },
+  barTrack:    { flex:1, width:"100%", background:"#f1f5f9", borderRadius:6, display:"flex", alignItems:"flex-end", overflow:"hidden" },
+  barFill:     { width:"100%", background:"linear-gradient(180deg,#2DD4BF,#6366F1)", borderRadius:6, transition:"height 0.6s ease" },
+  barLabel:    { fontSize:11, color:"#94a3b8", fontWeight:500 },
+
+  catList:     { display:"flex", flexDirection:"column", gap:14 },
+  catItem:     { display:"flex", flexDirection:"column", gap:6 },
+  catRow:      { display:"flex", justifyContent:"space-between", alignItems:"center" },
+  catDot:      { width:8, height:8, borderRadius:"50%", display:"inline-block" },
+  catName:     { fontSize:13, color:"#334155" },
+  catPct:      { fontSize:13, fontWeight:700, color:"#1e293b" },
+  catTrack:    { height:6, background:"#f1f5f9", borderRadius:99, overflow:"hidden" },
+  catFill:     { height:"100%", borderRadius:99, transition:"width 0.6s ease" },
+
+  table:       { width:"100%", borderCollapse:"collapse", fontSize:13 },
+  th:          { textAlign:"left", padding:"10px 14px", fontSize:11, fontWeight:600, color:"#94a3b8", textTransform:"uppercase", letterSpacing:"0.06em", borderBottom:"2px solid #f1f5f9", whiteSpace:"nowrap" },
+  td:          { padding:"12px 14px", color:"#475569", borderBottom:"1px solid #f8fafc" },
+  trEven:      { background:"#fff" },
+  trOdd:       { background:"#fafafa" },
+  badge:       { display:"inline-block", padding:"3px 10px", borderRadius:99, fontSize:12, fontWeight:600 },
+  pill:        { display:"inline-block", padding:"3px 10px", borderRadius:99, fontSize:12, background:"#f1f5f9", color:"#475569", fontWeight:500 },
+};
+
+// Simple inline SVG icons
+const DownloadIcon = () => (
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+  </svg>
+);
+const FileIcon = () => (
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+  </svg>
+);
 
 export default Reports;
