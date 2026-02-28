@@ -321,8 +321,8 @@
   color: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em;
   position: absolute;
 }
-.ml-matrix-axis-label--top  { top: 0; left: 50%; transform: translateX(-50%); }
-.ml-matrix-axis-label--left { top: 50%; left: 0; transform: translateY(-50%) rotate(-90deg); transform-origin: center; }
+.ml-matrix-axis-label--top  { top: -1.5rem; left: 50%; transform: translateX(-50%); }
+.ml-matrix-axis-label--left { top: 50%; left: -1.5rem; transform: translateY(-50%) rotate(-90deg); transform-origin: center; }
 
 .ml-matrix-table-wrap { }
 .ml-matrix-col-headers { display: flex; margin-bottom: 4px; }
