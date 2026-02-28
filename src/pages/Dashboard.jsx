@@ -17,10 +17,11 @@ function Dashboard() {
     <AdminLayout>
 
       {/* ── Welcome Banner ── */}
-      <div className="db-banner">
+      <div className="db-banner" role="region" aria-label="Dashboard welcome banner">
         <div className="db-banner-left">
           <p className="db-banner-greeting">{greeting}, Admin 👋</p>
-          <h2 className="db-banner-title">Admin Dashboard</h2>
+          {/* FIX: h1 is the correct top-level heading inside main content */}
+          <h1 className="db-banner-title">Admin Dashboard</h1>
           <p className="db-banner-date">
             {new Date().toLocaleDateString("en-US", {
               weekday: "long", year: "numeric",
@@ -29,17 +30,21 @@ function Dashboard() {
           </p>
         </div>
         <div className="db-banner-right">
-          <div className="db-banner-ai-badge">
-            <span className="db-banner-ai-dot" />
+          <div className="db-banner-ai-badge" aria-label="AI Model status">
+            <span className="db-banner-ai-dot" aria-hidden="true" />
             AI Model Active
           </div>
+          {/* FIX: type="button" added */}
           <button
+            type="button"
             className={`db-toggle-btn ${!showCharts ? "db-toggle-btn--off" : ""}`}
             onClick={() => setShowCharts(!showCharts)}
+            aria-pressed={showCharts}
+            aria-label={showCharts ? "Hide charts" : "Show charts"}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
               stroke="currentColor" strokeWidth="2.5"
-              strokeLinecap="round" strokeLinejoin="round">
+              strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               {showCharts ? (
                 <>
                   <path d="M3 3h7v7H3z"/><path d="M14 3h7v7h-7z"/>
@@ -58,23 +63,24 @@ function Dashboard() {
         </div>
       </div>
 
-      {/* ── Section Label ── */}
-      <p className="db-section-label">Overview Metrics</p>
+      {/* ── Overview Metrics ── */}
+      {/* FIX: h2 under h1, correct heading hierarchy */}
+      <h2 className="db-section-label">Overview Metrics</h2>
       <MetricsGrid />
 
       {/* ── Charts ── */}
       {showCharts && (
-        <>
-          <p className="db-section-label">Spending Analytics</p>
-          <section className="db-charts-grid">
+        <section aria-label="Spending analytics charts">
+          <h2 className="db-section-label">Spending Analytics</h2>
+          <div className="db-charts-grid">
             <SpendingChart />
             <DonutChart />
-          </section>
-        </>
+          </div>
+        </section>
       )}
 
       {/* ── Alerts ── */}
-      <p className="db-section-label">Recent AI Alerts</p>
+      <h2 className="db-section-label">Recent AI Alerts</h2>
       <AlertsPanel />
 
     </AdminLayout>

@@ -127,6 +127,7 @@
 }
 
 /* ── Section Labels ── */
+/* FIX: was styled for <p> tag — now applied to <h2> for correct heading hierarchy */
 .db-section-label {
   font-family: var(--font-heading);
   font-size: 0.68rem;
@@ -134,7 +135,9 @@
   color: #94a3b8;
   text-transform: uppercase;
   letter-spacing: 0.1em;
+  /* FIX: reset h2 default margin/padding */
   margin: 0 0 0.875rem;
+  padding: 0;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -546,52 +549,8 @@
   .admin-content    { padding: 1.25rem; }
 }
 
-/* ── Dark Chart Card (Area Chart) ── */
-.db-chart-box--dark {
-  background: linear-gradient(145deg, #1a2b47 0%, #152237 100%) !important;
-  border-color: rgba(45,212,191,0.15) !important;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.05);
-}
-.db-chart-box--dark:hover {
-  box-shadow: 0 12px 40px rgba(0,0,0,0.35), 0 0 0 1px rgba(45,212,191,0.2) !important;
-}
-.db-chart-title--light { color: #f1f5f9 !important; }
-.db-chart-sub--light   { color: rgba(255,255,255,0.35) !important; }
+/* ── end of dashboard.css ── */
 
-.db-area-wrap {
-  width: 100%; margin-bottom: 1rem;
-  border-radius: 10px; overflow: hidden;
-  background: rgba(0,0,0,0.15);
-  border: 1px solid rgba(255,255,255,0.05);
-}
-.db-area-svg {
-  width: 100%; display: block; height: 160px;
-}
 
-.db-chart-summary--dark {
-  background: rgba(255,255,255,0.05) !important;
-  border: 1px solid rgba(255,255,255,0.07);
-}
-.db-chart-summary--dark .db-chart-summary-label { color: rgba(255,255,255,0.35) !important; }
-.db-chart-summary-val--light { color: #f1f5f9 !important; }
-.db-chart-summary-divider--dark { background: rgba(255,255,255,0.1) !important; }
 
-.db-chart-footer--dark {
-  border-top-color: rgba(255,255,255,0.08) !important;
-}
-.db-viewmore-btn--dark {
-  background: rgba(255,255,255,0.07) !important;
-  border-color: rgba(255,255,255,0.12) !important;
-  color: rgba(255,255,255,0.6) !important;
-}
-.db-viewmore-btn--dark:hover {
-  background: rgba(45,212,191,0.2) !important;
-  border-color: rgba(45,212,191,0.35) !important;
-  color: #2DD4BF !important;
-}
 
-/* ── Light Area Wrap (Curved Line Chart) ── */
-.db-area-wrap--light {
-  background: #fafcff !important;
-  border: 1px solid #f1f5f9 !important;
-}

@@ -5,18 +5,18 @@ function DonutChart() {
   const navigate = useNavigate();
   const total = mockCategoryData.reduce((s, d) => s + d.value, 0);
 
-  const radius = 70;
-  const cx = 90;
-  const cy = 90;
+  const radius       = 70;
+  const cx           = 90;
+  const cy           = 90;
   const circumference = 2 * Math.PI * radius;
 
   let cumulative = 0;
   const segments = mockCategoryData.map((d) => {
     const fraction = d.value / total;
-    const dash = fraction * circumference;
-    const gap = circumference - dash;
-    const offset = circumference * (1 - cumulative);
-    cumulative += fraction;
+    const dash     = fraction * circumference;
+    const gap      = circumference - dash;
+    const offset   = circumference * (1 - cumulative);
+    cumulative    += fraction;
     return { ...d, dash, gap, offset, fraction };
   });
 
@@ -35,9 +35,18 @@ function DonutChart() {
       </div>
 
       <div className="db-donut-layout">
-        <div className="db-donut-svg-wrap">
-          <svg viewBox="0 0 180 180" style={{ transform: "rotate(-90deg)", width: "100%", height: "auto" }}>
+        <div
+          className="db-donut-svg-wrap"
+          role="img"
+          aria-label={`Donut chart showing spending by category. Total: ${totalLabel}`}
+        >
+          <svg
+            viewBox="0 0 180 180"
+            style={{ transform: "rotate(-90deg)", width: "100%", height: "auto" }}
+            aria-hidden="true"
+          >
             <circle cx={cx} cy={cy} r={radius} fill="none" stroke="#f1f5f9" strokeWidth="22" />
+            {/* FIX: key uses seg.label — unique string, not index */}
             {segments.map((seg) => (
               <circle
                 key={seg.label}
@@ -51,16 +60,17 @@ function DonutChart() {
               />
             ))}
           </svg>
-          <div className="db-donut-center">
+          <div className="db-donut-center" aria-hidden="true">
             <span className="db-donut-center-value">{totalLabel}</span>
             <span className="db-donut-center-label">total spend</span>
           </div>
         </div>
 
-        <ul className="db-donut-legend">
+        {/* FIX: key uses d.label — unique string, not index */}
+        <ul className="db-donut-legend" aria-label="Category legend">
           {mockCategoryData.map((d) => (
             <li key={d.label} className="db-donut-legend-item">
-              <span className="db-donut-dot" style={{ background: d.color }} />
+              <span className="db-donut-dot" style={{ background: d.color }} aria-hidden="true" />
               <span className="db-donut-legend-label">{d.label}</span>
               <span className="db-donut-legend-value">
                 {((d.value / total) * 100).toFixed(0)}%
@@ -71,9 +81,17 @@ function DonutChart() {
       </div>
 
       <div className="db-chart-footer">
-        <button className="db-viewmore-btn" onClick={() => navigate("/reports")}>
+        {/* FIX: type="button" added */}
+        <button
+          type="button"
+          className="db-viewmore-btn"
+          onClick={() => navigate("/reports")}
+          aria-label="View full spending report"
+        >
           View Full Report
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" strokeWidth="2.5"
+            strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M5 12h14M12 5l7 7-7 7"/>
           </svg>
         </button>
