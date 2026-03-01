@@ -116,159 +116,201 @@ function Reports() {
 
   return (
     <AdminLayout>
-      <div style={styles.page}>
+      {/* ── LAB 5 FIX: Replaced outer <div> with <main> for semantic HTML ── */}
+      <main style={styles.page}>
 
         {/* ── Page Header ── */}
-        <div style={styles.pageHeader}>
+        <header style={styles.pageHeader}>
           <div>
             <p style={styles.pageEyebrow}>Analytics & Export</p>
-            <h2 style={styles.pageTitle}>Reports</h2>
+            {/* ── LAB 5 FIX: Changed <h2> to <h1> for correct heading hierarchy ── */}
+            <h1 style={styles.pageTitle}>Reports</h1>
           </div>
           <div style={styles.exportRow}>
-            {exported && <span style={styles.toast}>{exportMsg}</span>}
-            <button style={{...styles.btn, ...styles.btnOutline}} onClick={handleExportCSV}>
+            {exported && <span style={styles.toast} role="status">{exportMsg}</span>}
+            {/* ── LAB 5 FIX: Added type="button" to all buttons ── */}
+            <button type="button" style={{...styles.btn, ...styles.btnOutline}} onClick={handleExportCSV}>
               <DownloadIcon /> Export CSV
             </button>
-            <button style={{...styles.btn, ...styles.btnDark}} onClick={handleExportPDF}>
+            <button type="button" style={{...styles.btn, ...styles.btnDark}} onClick={handleExportPDF}>
               <FileIcon /> Export PDF
             </button>
           </div>
-        </div>
+        </header>
 
         {/* ── Filter Bar ── */}
-        <div style={styles.filterCard}>
-          <p style={styles.filterLabel}>Select Date Range</p>
-          <div style={styles.filterRow}>
-            <div style={styles.filterGroup}>
-              <label style={styles.inputLabel}>From</label>
-              <input type="month" value={dateFrom} onChange={(e)=>setDateFrom(e.target.value)} style={styles.input}/>
+        {/* ── LAB 5 FIX: Wrapped in <section> with aria-label for semantic HTML ── */}
+        <section aria-label="Date Range Filter">
+          <div style={styles.filterCard}>
+            <p style={styles.filterLabel}>Select Date Range</p>
+            <div style={styles.filterRow}>
+              <div style={styles.filterGroup}>
+                {/* ── LAB 5 FIX: Added htmlFor + id to link label and input ── */}
+                <label htmlFor="dateFrom" style={styles.inputLabel}>From</label>
+                <input
+                  id="dateFrom"
+                  type="month"
+                  value={dateFrom}
+                  onChange={(e) => setDateFrom(e.target.value)}
+                  style={styles.input}
+                />
+              </div>
+              <span style={styles.arrow} aria-hidden="true">→</span>
+              <div style={styles.filterGroup}>
+                {/* ── LAB 5 FIX: Added htmlFor + id to link label and input ── */}
+                <label htmlFor="dateTo" style={styles.inputLabel}>To</label>
+                <input
+                  id="dateTo"
+                  type="month"
+                  value={dateTo}
+                  onChange={(e) => setDateTo(e.target.value)}
+                  style={styles.input}
+                />
+              </div>
+              {/* ── LAB 5 FIX: Added type="button" ── */}
+              <button type="button" style={{...styles.btn, ...styles.btnPrimary}} onClick={generateReport}>
+                Generate Report
+              </button>
             </div>
-            <span style={styles.arrow}>→</span>
-            <div style={styles.filterGroup}>
-              <label style={styles.inputLabel}>To</label>
-              <input type="month" value={dateTo} onChange={(e)=>setDateTo(e.target.value)} style={styles.input}/>
-            </div>
-            <button style={{...styles.btn, ...styles.btnPrimary}} onClick={generateReport}>
-              Generate Report
-            </button>
+            {hasGenerated && (
+              <p style={styles.filterHint}>
+                ✓ Showing data from <strong>{dateFrom}</strong> to <strong>{dateTo}</strong>
+              </p>
+            )}
           </div>
-          {hasGenerated && (
-            <p style={styles.filterHint}>
-              ✓ Showing data from <strong>{dateFrom}</strong> to <strong>{dateTo}</strong>
-            </p>
-          )}
-        </div>
+        </section>
 
         {/* ── KPI Cards ── */}
-        <div style={styles.kpiGrid}>
-          {[
-            {label:"Total Spending", value:"₱"+totalSpendNum.toLocaleString(), icon:"₱", color:"#2DD4BF", bg:"#f0fdfb"},
-            {label:"Total Users",    value:totalUsers.toLocaleString(),         icon:"👥", color:"#6366F1", bg:"#f5f3ff"},
-            {label:"Total Alerts",   value:totalAlerts.toLocaleString(),        icon:"🔔", color:"#F59E0B", bg:"#fffbeb"},
-            {label:"Total Savings",  value:"₱"+totalSavingsNum.toLocaleString(),icon:"💰", color:"#10b981", bg:"#ecfdf5"},
-          ].map((k)=>(
-            <div key={k.label} style={{...styles.kpiCard, background: k.bg, borderColor: k.color+"33"}}>
-              <div style={{...styles.kpiIconBox, color: k.color}}>{k.icon}</div>
-              <p style={{...styles.kpiValue, color: k.color}}>{k.value}</p>
-              <p style={styles.kpiLabel}>{k.label}</p>
-            </div>
-          ))}
-        </div>
+        {/* ── LAB 5 FIX: Wrapped in <section> with aria-label ── */}
+        <section aria-label="Summary Statistics">
+          <div style={styles.kpiGrid}>
+            {[
+              {label:"Total Spending", value:"₱"+totalSpendNum.toLocaleString(), icon:"₱", color:"#2DD4BF", bg:"#f0fdfb"},
+              {label:"Total Users",    value:totalUsers.toLocaleString(),         icon:"👥", color:"#6366F1", bg:"#f5f3ff"},
+              {label:"Total Alerts",   value:totalAlerts.toLocaleString(),        icon:"🔔", color:"#F59E0B", bg:"#fffbeb"},
+              {label:"Total Savings",  value:"₱"+totalSavingsNum.toLocaleString(),icon:"💰", color:"#10b981", bg:"#ecfdf5"},
+            ].map((k) => (
+              <div key={k.label} style={{...styles.kpiCard, background: k.bg, borderColor: k.color+"33"}}>
+                <div style={{...styles.kpiIconBox, color: k.color}} aria-hidden="true">{k.icon}</div>
+                <p style={{...styles.kpiValue, color: k.color}}>{k.value}</p>
+                <p style={styles.kpiLabel}>{k.label}</p>
+              </div>
+            ))}
+          </div>
+        </section>
 
         {/* ── Charts Row ── */}
-        <div style={styles.chartsRow}>
+        {/* ── LAB 5 FIX: Wrapped in <section> with aria-label ── */}
+        <section aria-label="Spending Charts">
+          <div style={styles.chartsRow}>
 
-          {/* Bar Chart */}
-          <div style={styles.card}>
-            <div style={styles.cardHeader}>
-              <h3 style={styles.cardTitle}>Monthly Spending Trend</h3>
-              <p style={styles.cardSub}>Total platform spend per month</p>
-            </div>
-            <div style={styles.barChart}>
-              {filteredChart.map((d,i)=>(
-                <div key={d.month} style={styles.barCol}>
-                  <span style={styles.barVal}>₱{(d.amount/1000).toFixed(0)}k</span>
-                  <div style={styles.barTrack}>
-                    <div style={{
-                      ...styles.barFill,
-                      height:`${(d.amount/maxSpend)*100}%`,
-                      animationDelay:`${i*0.08}s`
-                    }}/>
-                  </div>
-                  <span style={styles.barLabel}>{d.month}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Category Chart */}
-          <div style={styles.card}>
-            <div style={styles.cardHeader}>
-              <h3 style={styles.cardTitle}>Top Spending Categories</h3>
-              <p style={styles.cardSub}>Platform-wide distribution</p>
-            </div>
-            <div style={styles.catList}>
-              {categories.map((c)=>(
-                <div key={c.label} style={styles.catItem}>
-                  <div style={styles.catRow}>
-                    <div style={{display:"flex",alignItems:"center",gap:8}}>
-                      <span style={{...styles.catDot, background:c.color}}/>
-                      <span style={styles.catName}>{c.label}</span>
+            {/* Bar Chart */}
+            <div style={styles.card}>
+              <div style={styles.cardHeader}>
+                {/* h2 is correct here — comes after h1 "Reports" ── */}
+                <h2 style={styles.cardTitle}>Monthly Spending Trend</h2>
+                <p style={styles.cardSub}>Total platform spend per month</p>
+              </div>
+              <div style={styles.barChart} role="img" aria-label="Bar chart showing monthly spending trend">
+                {filteredChart.map((d, i) => (
+                  <div key={d.month} style={styles.barCol}>
+                    <span style={styles.barVal}>₱{(d.amount/1000).toFixed(0)}k</span>
+                    <div style={styles.barTrack}>
+                      <div style={{
+                        ...styles.barFill,
+                        height:`${(d.amount/maxSpend)*100}%`,
+                        animationDelay:`${i*0.08}s`
+                      }}/>
                     </div>
-                    <span style={styles.catPct}>{c.pct}%</span>
+                    <span style={styles.barLabel}>{d.month}</span>
                   </div>
-                  <div style={styles.catTrack}>
-                    <div style={{...styles.catFill, width:`${c.pct}%`, background:c.color}}/>
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
+
+            {/* Category Chart */}
+            <div style={styles.card}>
+              <div style={styles.cardHeader}>
+                <h2 style={styles.cardTitle}>Top Spending Categories</h2>
+                <p style={styles.cardSub}>Platform-wide distribution</p>
+              </div>
+              <div style={styles.catList}>
+                {categories.map((c) => (
+                  <div key={c.label} style={styles.catItem}>
+                    <div style={styles.catRow}>
+                      <div style={{display:"flex",alignItems:"center",gap:8}}>
+                        <span style={{...styles.catDot, background:c.color}} aria-hidden="true"/>
+                        <span style={styles.catName}>{c.label}</span>
+                      </div>
+                      <span style={styles.catPct}>{c.pct}%</span>
+                    </div>
+                    <div
+                      style={styles.catTrack}
+                      role="progressbar"
+                      aria-valuenow={c.pct}
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                      aria-label={`${c.label}: ${c.pct}%`}
+                    >
+                      <div style={{...styles.catFill, width:`${c.pct}%`, background:c.color}}/>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
           </div>
-        </div>
+        </section>
 
         {/* ── Table ── */}
-        <div style={styles.card}>
-          <div style={styles.cardHeader}>
-            <div>
-              <h3 style={styles.cardTitle}>Monthly Summary</h3>
-              <p style={styles.cardSub}>Detailed breakdown per month — {filteredData.length} record{filteredData.length !== 1 ? "s" : ""} shown</p>
+        {/* ── LAB 5 FIX: Wrapped in <section> with aria-label ── */}
+        <section aria-label="Monthly Summary Table">
+          <div style={styles.card}>
+            <div style={styles.cardHeader}>
+              <div>
+                <h2 style={styles.cardTitle}>Monthly Summary</h2>
+                <p style={styles.cardSub}>
+                  Detailed breakdown per month — {filteredData.length} record{filteredData.length !== 1 ? "s" : ""} shown
+                </p>
+              </div>
+            </div>
+            <div style={{overflowX:"auto"}}>
+              {/* ── LAB 5 FIX: Added aria-label to table ── */}
+              <table style={styles.table} aria-label="Monthly spending summary">
+                <thead>
+                  <tr>
+                    {["Month","Active Users","Total Spend","Avg / User","AI Alerts","Total Savings","Top Category"].map((h) => (
+                      <th key={h} style={styles.th} scope="col">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredData.map((row, i) => (
+                    <tr key={row.month} style={i%2===0 ? styles.trEven : styles.trOdd}>
+                      <td style={{...styles.td, fontWeight:600, color:"#1e293b"}}>{row.month}</td>
+                      <td style={styles.td}>{row.users.toLocaleString()}</td>
+                      <td style={{...styles.td, color:"#0f766e", fontWeight:600}}>{row.totalSpend}</td>
+                      <td style={styles.td}>{row.avgSpend}</td>
+                      <td style={styles.td}>
+                        <span style={{
+                          ...styles.badge,
+                          background: row.alerts>290?"#fef2f2":row.alerts>220?"#fffbeb":"#f0fdf4",
+                          color:       row.alerts>290?"#dc2626":row.alerts>220?"#d97706":"#16a34a",
+                        }}>{row.alerts}</span>
+                      </td>
+                      <td style={{...styles.td, color:"#059669", fontWeight:600}}>{row.savings}</td>
+                      <td style={styles.td}>
+                        <span style={styles.pill}>{row.topCategory}</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
-          <div style={{overflowX:"auto"}}>
-            <table style={styles.table}>
-              <thead>
-                <tr>
-                  {["Month","Active Users","Total Spend","Avg / User","AI Alerts","Total Savings","Top Category"].map((h)=>(
-                    <th key={h} style={styles.th}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {filteredData.map((row,i)=>(
-                  <tr key={row.month} style={i%2===0?styles.trEven:styles.trOdd}>
-                    <td style={{...styles.td, fontWeight:600, color:"#1e293b"}}>{row.month}</td>
-                    <td style={styles.td}>{row.users.toLocaleString()}</td>
-                    <td style={{...styles.td, color:"#0f766e", fontWeight:600}}>{row.totalSpend}</td>
-                    <td style={styles.td}>{row.avgSpend}</td>
-                    <td style={styles.td}>
-                      <span style={{
-                        ...styles.badge,
-                        background: row.alerts>290?"#fef2f2":row.alerts>220?"#fffbeb":"#f0fdf4",
-                        color:       row.alerts>290?"#dc2626":row.alerts>220?"#d97706":"#16a34a",
-                      }}>{row.alerts}</span>
-                    </td>
-                    <td style={{...styles.td, color:"#059669", fontWeight:600}}>{row.savings}</td>
-                    <td style={styles.td}>
-                      <span style={styles.pill}>{row.topCategory}</span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        </section>
 
-      </div>
+      </main>
     </AdminLayout>
   );
 }
@@ -335,12 +377,12 @@ const styles = {
 
 // Simple inline SVG icons
 const DownloadIcon = () => (
-  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
   </svg>
 );
 const FileIcon = () => (
-  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
   </svg>
 );
