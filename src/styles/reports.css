@@ -1,16 +1,40 @@
 /* ============================================================
    SpendWise AI — reports.css
+   Brand Colors:
+   Trust Navy:       #1A2B47  — Primary Text / Branding
+   Growth Teal:      #2DD4BF  — Primary Action / Success
+   Intelligence Blue:#6366F1  — Secondary / AI Features
+   Alert Amber:      #F59E0B  — Warnings / Limits
+   Soft Slate:       #F8FAFC  — Background / UI
    ============================================================ */
+
+/* ── Page Wrapper ── */
+.rp-main {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* ── Filter Label & Hint ── */
+.rp-filter-label {
+  font-size: 0.72rem; font-weight: 600; color: #94a3b8;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  margin: 0 0 0.25rem; width: 100%;
+}
+.rp-filter-hint {
+  font-size: 0.8rem; color: #64748b; margin: 0.5rem 0 0; width: 100%;
+}
 
 /* ── Header ── */
 .rp-header {
   display: flex; align-items: flex-end; justify-content: space-between;
-  margin-bottom: 1.75rem;
+  margin-bottom: 0;
 }
 .rp-header-sub  { font-size: 0.75rem; color: #94a3b8; margin-bottom: 0.2rem; }
 .rp-header-title {
   font-family: var(--font-heading); font-size: 1.6rem; font-weight: 700;
-  color: var(--sw-navy); letter-spacing: -0.02em; margin: 0;
+  color: #1A2B47; /* Trust Navy */
+  letter-spacing: -0.02em; margin: 0;
 }
 .rp-export-group { display: flex; align-items: center; gap: 0.625rem; position: relative; }
 .rp-export-toast {
@@ -29,21 +53,24 @@
   cursor: pointer; transition: all 0.15s; border: 1.5px solid transparent;
 }
 .rp-export-btn--csv {
-  background: var(--sw-slate); border-color: #e2e8f0; color: var(--sw-navy);
+  background: #F8FAFC; /* Soft Slate */
+  border-color: #e2e8f0;
+  color: #1A2B47; /* Trust Navy */
 }
-.rp-export-btn--csv:hover { border-color: var(--sw-teal); background: rgba(45,212,191,0.08); }
+.rp-export-btn--csv:hover { border-color: #2DD4BF; background: rgba(45,212,191,0.08); } /* Growth Teal */
 .rp-export-btn--pdf {
-  background: var(--sw-navy); color: #fff;
+  background: #1A2B47; /* Trust Navy */
+  color: #fff;
 }
 .rp-export-btn--pdf:hover {
-  background: linear-gradient(135deg, var(--sw-teal), var(--sw-indigo));
+  background: linear-gradient(135deg, #2DD4BF, #6366F1); /* Teal to Blue */
   transform: translateY(-1px); box-shadow: 0 6px 16px rgba(26,43,71,0.25);
 }
 
 /* ── KPI Row ── */
 .rp-kpi-row {
   display: grid; grid-template-columns: repeat(4, 1fr);
-  gap: 1.25rem; margin-bottom: 1.75rem;
+  gap: 1.25rem;
 }
 .rp-kpi-card {
   background: #fff; border-radius: 14px; padding: 1.25rem 1.4rem;
@@ -57,6 +84,7 @@
 .rp-kpi-value {
   font-family: var(--font-heading); font-size: 1.4rem; font-weight: 800;
   margin: 0 0 0.25rem; letter-spacing: -0.02em;
+  color: #1A2B47; /* Trust Navy */
 }
 .rp-kpi-label { font-size: 0.74rem; color: #94a3b8; margin: 0; }
 
@@ -64,7 +92,7 @@
 .rp-filter-bar {
   display: flex; align-items: center; gap: 1rem;
   background: #fff; border-radius: 12px; padding: 0.875rem 1.25rem;
-  border: 1.5px solid #f1f5f9; margin-bottom: 1.5rem; flex-wrap: wrap;
+  border: 1.5px solid #f1f5f9; flex-wrap: wrap;
 }
 .rp-filter-group { display: flex; flex-direction: column; gap: 3px; }
 .rp-filter-group label {
@@ -74,32 +102,42 @@
 .rp-filter-group input[type="month"] {
   border: 1.5px solid #e2e8f0; border-radius: 8px;
   padding: 0.4rem 0.7rem; font-size: 0.82rem;
-  font-family: var(--font-body); color: var(--sw-navy);
-  background: var(--sw-slate); outline: none;
+  font-family: var(--font-body);
+  color: #1A2B47; /* Trust Navy */
+  background: #F8FAFC; /* Soft Slate */
   transition: border-color 0.2s;
 }
-.rp-filter-group input[type="month"]:focus { border-color: var(--sw-teal); }
+.rp-filter-group input[type="month"]:focus {
+  border-color: #2DD4BF; /* Growth Teal */
+}
 .rp-filter-divider { color: #94a3b8; font-size: 1rem; padding-top: 1rem; }
 .rp-filter-apply {
   margin-left: auto; padding: 0.55rem 1.25rem;
-  background: var(--sw-navy); color: #fff; border: none;
+  background: #2DD4BF; /* Growth Teal — Primary Action */
+  color: #fff; border: none;
   border-radius: 10px; font-family: var(--font-heading);
   font-size: 0.8rem; font-weight: 600; cursor: pointer;
   transition: all 0.15s;
 }
-.rp-filter-apply:hover { background: linear-gradient(135deg, var(--sw-teal), var(--sw-indigo)); }
+.rp-filter-apply:hover {
+  background: linear-gradient(135deg, #2DD4BF, #6366F1); /* Teal to Intelligence Blue */
+}
 
 /* ── Content Grid ── */
 .rp-content-grid {
   display: grid; grid-template-columns: 1.4fr 1fr;
-  gap: 1.25rem; margin-bottom: 1.5rem;
+  gap: 1.25rem;
 }
 .rp-chart-box {
   background: #fff; border-radius: 14px;
   padding: 1.5rem; border: 1.5px solid #f1f5f9;
 }
 .rp-chart-header { margin-bottom: 1.25rem; }
-.rp-chart-title { font-family: var(--font-heading); font-size: 0.95rem; font-weight: 700; color: var(--sw-navy); margin: 0 0 3px; }
+.rp-chart-title {
+  font-family: var(--font-heading); font-size: 0.95rem; font-weight: 700;
+  color: #1A2B47; /* Trust Navy */
+  margin: 0 0 3px;
+}
 .rp-chart-sub   { font-size: 0.74rem; color: #94a3b8; margin: 0; }
 
 /* Trend Bar Chart */
@@ -113,7 +151,7 @@
 .rp-trend-track { flex: 1; width: 100%; background: #f1f5f9; border-radius: 5px; overflow: hidden; display: flex; align-items: flex-end; }
 .rp-trend-fill  {
   width: 100%; border-radius: 5px;
-  background: linear-gradient(180deg, var(--sw-teal), var(--sw-indigo));
+  background: linear-gradient(180deg, #2DD4BF, #6366F1); /* Growth Teal to Intelligence Blue */
   animation: rpFillGrow 0.8s cubic-bezier(0.16,1,0.3,1) both;
 }
 @keyframes rpFillGrow { from { height: 0 !important; } }
@@ -128,7 +166,10 @@
 .rp-cat-label-row { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 5px; }
 .rp-cat-dot  { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
 .rp-cat-name { font-size: 0.78rem; color: #64748b; flex: 1; }
-.rp-cat-pct  { font-family: var(--font-heading); font-size: 0.78rem; font-weight: 700; color: var(--sw-navy); }
+.rp-cat-pct  {
+  font-family: var(--font-heading); font-size: 0.78rem; font-weight: 700;
+  color: #1A2B47; /* Trust Navy */
+}
 .rp-cat-bar  { height: 5px; background: #f1f5f9; border-radius: 99px; overflow: hidden; }
 .rp-cat-bar-fill { height: 100%; border-radius: 99px; transition: width 1s ease; animation: rpFillGrow 1s ease both; }
 
@@ -143,7 +184,10 @@
   margin-bottom: 1rem;
 }
 .rp-table { width: 100%; border-collapse: collapse; }
-.rp-table thead tr { background: var(--sw-slate); border-bottom: 1.5px solid #e2e8f0; }
+.rp-table thead tr {
+  background: #F8FAFC; /* Soft Slate */
+  border-bottom: 1.5px solid #e2e8f0;
+}
 .rp-table th {
   padding: 0.75rem 1rem; text-align: left;
   font-family: var(--font-heading); font-size: 0.72rem;
@@ -155,27 +199,45 @@
   transition: background 0.15s;
   background: transparent !important;
 }
-.rp-table-row:hover { background: #fafcff !important; }
+.rp-table-row:hover { background: #F8FAFC !important; } /* Soft Slate */
 .rp-table-row:last-child { border-bottom: none; }
 @keyframes rpRowIn { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } }
 .rp-table td { padding: 0.875rem 1rem; vertical-align: middle; }
 
-.rp-month-cell { font-family: var(--font-heading); font-size: 0.84rem; font-weight: 600; color: var(--sw-navy); }
-.rp-num     { font-family: var(--font-heading); font-size: 0.84rem; font-weight: 600; color: var(--sw-navy); }
-.rp-savings { font-family: var(--font-heading); font-size: 0.84rem; font-weight: 600; color: #0d9488; }
+.rp-month-cell {
+  font-family: var(--font-heading); font-size: 0.84rem; font-weight: 600;
+  color: #1A2B47; /* Trust Navy */
+}
+.rp-num {
+  font-family: var(--font-heading); font-size: 0.84rem; font-weight: 600;
+  color: #1A2B47; /* Trust Navy */
+}
+.rp-savings {
+  font-family: var(--font-heading); font-size: 0.84rem; font-weight: 600;
+  color: #2DD4BF; /* Growth Teal — success/positive */
+}
 
 .rp-alert-badge {
   display: inline-block; padding: 3px 10px; border-radius: 20px;
   font-size: 0.72rem; font-weight: 600; font-family: var(--font-heading);
 }
-.rp-alert-badge--high { background: rgba(239,68,68,0.1);   color: #b91c1c; }
-.rp-alert-badge--mid  { background: rgba(245,158,11,0.12); color: #b45309; }
-.rp-alert-badge--low  { background: rgba(45,212,191,0.12); color: #0d9488; }
+.rp-alert-badge--high { background: rgba(239,68,68,0.1);    color: #b91c1c; }
+.rp-alert-badge--mid  { background: rgba(245,158,11,0.12);  color: #F59E0B; } /* Alert Amber */
+.rp-alert-badge--low  { background: rgba(45,212,191,0.12);  color: #2DD4BF; } /* Growth Teal */
 
 .rp-category-pill {
-  background: rgba(99,102,241,0.1); color: var(--sw-indigo);
+  background: rgba(99,102,241,0.1);
+  color: #6366F1; /* Intelligence Blue */
   padding: 3px 10px; border-radius: 20px;
   font-size: 0.72rem; font-family: var(--font-heading); font-weight: 500;
+}
+
+/* ── Focus Styles (Accessibility - Keyboard Navigation) ── */
+.rp-export-btn:focus,
+.rp-filter-apply:focus,
+.rp-filter-group input[type="month"]:focus {
+  outline: 2px solid #6366F1; /* Intelligence Blue */
+  outline-offset: 2px;
 }
 
 /* ── Responsive ── */
