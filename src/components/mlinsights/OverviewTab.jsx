@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-function MLOverviewTab({ mockMLMetrics, mockPredictionData, mockTopFlagged }) {
+function OverviewTab({ mockMLMetrics, mockPredictionData, mockTopFlagged }) {
   const [selectedBar, setSelectedBar] = useState(null);
   const [hoveredBar, setHoveredBar] = useState(null);
 
@@ -166,4 +166,4 @@ function MLOverviewTab({ mockMLMetrics, mockPredictionData, mockTopFlagged }) {
   );
 }
 
-export default MLOverviewTab;
+export default OverviewTab;

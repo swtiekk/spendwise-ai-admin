@@ -10,10 +10,10 @@ import {
 import "../styles/mlinsights.css";
 
 // Tab Components
-import MLOverviewTab from "../components/mlinsights/MLOverviewTab";
-import MLClustersTab from "../components/mlinsights/MLClustersTab";
-import MLPatternsTab from "../components/mlinsights/MLPatternsTab";
-import MLMatrixTab from "../components/mlinsights/MLMatrixTab";
+import OverviewTab from "../components/mlinsights/OverviewTab";
+import ClustersTab from "../components/mlinsights/ClustersTab";
+import PatternsTab from "../components/mlinsights/PatternsTab";
+import MatrixTab from "../components/mlinsights/MatrixTab";
 
 // ── Confusion Matrix Data (kept here for header badge) ──
 const confusionMatrix = {
@@ -72,7 +72,7 @@ function MLInsights() {
 
       {/* ══════════════ TAB CONTENT ══════════════ */}
       {activeTab === "overview" && (
-        <MLOverviewTab 
+        <OverviewTab 
           mockMLMetrics={mockMLMetrics} 
           mockPredictionData={mockPredictionData} 
           mockTopFlagged={mockTopFlagged} 
@@ -80,19 +80,19 @@ function MLInsights() {
       )}
 
       {activeTab === "clusters" && (
-        <MLClustersTab 
+        <ClustersTab 
           mockCategoryData={mockCategoryData} 
         />
       )}
 
       {activeTab === "patterns" && (
-        <MLPatternsTab 
+        <PatternsTab 
           mockBehaviorPatterns={mockBehaviorPatterns} 
         />
       )}
 
       {activeTab === "matrix" && (
-        <MLMatrixTab 
+        <MatrixTab 
           confusionMatrix={confusionMatrix} 
         />
       )}

@@ -1,4 +1,4 @@
-function MLMatrixTab({ confusionMatrix }) {
+function MatrixTab({ confusionMatrix }) {
   // confusion matrix totals
   const cmTotal = confusionMatrix.matrix.flat().reduce((a, b) => a + b, 0);
   const cmAccuracy = ((confusionMatrix.matrix[0][0] + confusionMatrix.matrix[1][1]) / cmTotal * 100).toFixed(1);
@@ -107,4 +107,4 @@ function MLMatrixTab({ confusionMatrix }) {
   );
 }
 
-export default MLMatrixTab;
+export default MatrixTab;

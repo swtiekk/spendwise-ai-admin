@@ -8,7 +8,7 @@ const clusterData = [
   { label: "At-Risk",      value: 201, color: "#ef4444", desc: "Exceeding budget, multiple alerts flagged" },
 ];
 
-function MLClustersTab({ mockCategoryData }) {
+function ClustersTab({ mockCategoryData }) {
   const [selectedCluster, setSelectedCluster] = useState(null);
 
   const maxCluster = Math.max(...clusterData.map((d) => d.value));
@@ -183,4 +183,4 @@ function MLClustersTab({ mockCategoryData }) {
   );
 }
 
-export default MLClustersTab;
+export default ClustersTab;

@@ -6,7 +6,7 @@ const riskConfig = {
   low:    { color: "#2DD4BF", bg: "rgba(45,212,191,0.1)",  label: "Low"    },
 };
 
-function MLPatternsTab({ mockBehaviorPatterns }) {
+function PatternsTab({ mockBehaviorPatterns }) {
   const [riskFilter, setRiskFilter] = useState("all");
   const [selectedPattern, setSelectedPattern] = useState(null);
 
@@ -82,4 +82,4 @@ function MLPatternsTab({ mockBehaviorPatterns }) {
   );
 }
 
-export default MLPatternsTab;
+export default PatternsTab;
