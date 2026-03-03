@@ -8,7 +8,6 @@ function OverviewTab({ mockMLMetrics, mockPredictionData, mockTopFlagged }) {
 
   return (
     <>
-      {/* ML Metric Cards */}
       <div className="ml-metrics-grid">
         {mockMLMetrics.map((m, i) => (
           <div className="ml-metric-card" key={m.label} style={{ animationDelay: `${i * 0.08}s` }}>
@@ -24,7 +23,6 @@ function OverviewTab({ mockMLMetrics, mockPredictionData, mockTopFlagged }) {
       </div>
 
       <div className="ml-main-grid">
-        {/* Prediction Chart — clickable bars */}
         <div className="ml-chart-box">
           <div className="ml-chart-header">
             <div>
@@ -54,7 +52,6 @@ function OverviewTab({ mockMLMetrics, mockPredictionData, mockTopFlagged }) {
                   onMouseEnter={() => setHoveredBar(d.month)}
                   onMouseLeave={() => setHoveredBar(null)}
                 >
-                  {/* Tooltip */}
                   {isHovered && (
                     <div className="ml-tooltip">
                       <p className="ml-tooltip-month">{d.month}</p>
@@ -97,7 +94,6 @@ function OverviewTab({ mockMLMetrics, mockPredictionData, mockTopFlagged }) {
             })}
           </div>
 
-          {/* Selected bar detail */}
           {selectedBar && (
             <div className="ml-bar-detail">
               <div className="ml-bar-detail-item">
@@ -125,7 +121,6 @@ function OverviewTab({ mockMLMetrics, mockPredictionData, mockTopFlagged }) {
           )}
         </div>
 
-        {/* Top Flagged */}
         <div className="ml-flagged-box">
           <div className="ml-chart-header">
             <div>

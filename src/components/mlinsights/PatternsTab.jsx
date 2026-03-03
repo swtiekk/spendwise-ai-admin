@@ -16,7 +16,6 @@ function PatternsTab({ mockBehaviorPatterns }) {
 
   return (
     <div className="ml-patterns-wrap">
-      {/* Filter bar */}
       <div className="ml-pattern-filter-bar">
         <span className="ml-pattern-filter-label">Filter by risk:</span>
         {["all", "high", "medium", "low"].map((r) => (
@@ -54,7 +53,6 @@ function PatternsTab({ mockBehaviorPatterns }) {
               />
             </div>
 
-            {/* Expanded detail on click */}
             {selectedPattern?.pattern === p.pattern && (
               <div className="ml-pattern-detail">
                 <div className="ml-pattern-detail-row">

@@ -1,6 +1,5 @@
 import { useState } from "react";
 
-// ── Cluster Distribution Chart ──
 const clusterData = [
   { label: "Savers",       value: 312, color: "#2DD4BF", desc: "Consistently under budget, high savings rate" },
   { label: "Balanced",     value: 487, color: "#6366F1", desc: "Moderate spending, occasional alerts" },
@@ -17,8 +16,6 @@ function ClustersTab({ mockCategoryData }) {
   return (
     <div className="ml-clusters-wrap">
       <div className="ml-clusters-grid">
-
-        {/* Horizontal bar chart */}
         <div className="ml-chart-box">
           <div className="ml-chart-header">
             <div>
@@ -67,7 +64,6 @@ function ClustersTab({ mockCategoryData }) {
             })}
           </div>
 
-          {/* Donut visualization */}
           <div className="ml-cluster-donut-wrap">
             <svg viewBox="0 0 180 180" className="ml-cluster-donut">
               {(() => {
@@ -116,7 +112,6 @@ function ClustersTab({ mockCategoryData }) {
           </div>
         </div>
 
-        {/* Cluster detail card */}
         <div className="ml-chart-box ml-cluster-detail-box">
           <h3 className="ml-chart-title" style={{ marginBottom: "1rem" }}>
             {selectedCluster ? `${selectedCluster.label} Cluster` : "Select a Cluster"}
@@ -155,7 +150,6 @@ function ClustersTab({ mockCategoryData }) {
                 </div>
               </div>
 
-              {/* Mini spending category breakdown per cluster */}
               <p className="ml-cluster-breakdown-title">Typical Spending Pattern</p>
               <div className="ml-cluster-breakdown">
                 {mockCategoryData.map((cat) => {

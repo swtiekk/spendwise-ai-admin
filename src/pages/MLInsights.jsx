@@ -8,14 +8,11 @@ import {
   mockCategoryData,
 } from "../data/mockData";
 import "../styles/mlinsights.css";
-
-// Tab Components
 import OverviewTab from "../components/mlinsights/OverviewTab";
 import ClustersTab from "../components/mlinsights/ClustersTab";
 import PatternsTab from "../components/mlinsights/PatternsTab";
 import MatrixTab from "../components/mlinsights/MatrixTab";
 
-// ── Confusion Matrix Data (kept here for header badge) ──
 const confusionMatrix = {
   labels: ["Will Overspend", "Won't Overspend"],
   matrix: [
@@ -27,14 +24,11 @@ const confusionMatrix = {
 function MLInsights() {
   const [activeTab, setActiveTab] = useState("overview");
 
-  // confusion matrix totals for header
   const cmTotal = confusionMatrix.matrix.flat().reduce((a, b) => a + b, 0);
   const cmAccuracy = ((confusionMatrix.matrix[0][0] + confusionMatrix.matrix[1][1]) / cmTotal * 100).toFixed(1);
 
   return (
     <AdminLayout>
-
-      {/* ── Header ── */}
       <section className="ml-header">
         <div>
           <p className="ml-header-sub">AI-Powered Analytics</p>
@@ -51,7 +45,6 @@ function MLInsights() {
         </div>
       </section>
 
-      {/* ── Tabs ── */}
       <div className="ml-tabs">
         {[
           { key: "overview",  label: "Overview",            icon: "⊞" },
@@ -70,7 +63,6 @@ function MLInsights() {
         ))}
       </div>
 
-      {/* ══════════════ TAB CONTENT ══════════════ */}
       {activeTab === "overview" && (
         <OverviewTab 
           mockMLMetrics={mockMLMetrics} 
@@ -96,7 +88,6 @@ function MLInsights() {
           confusionMatrix={confusionMatrix} 
         />
       )}
-
     </AdminLayout>
   );
 }

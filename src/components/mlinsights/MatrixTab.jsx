@@ -1,13 +1,10 @@
 function MatrixTab({ confusionMatrix }) {
-  // confusion matrix totals
   const cmTotal = confusionMatrix.matrix.flat().reduce((a, b) => a + b, 0);
   const cmAccuracy = ((confusionMatrix.matrix[0][0] + confusionMatrix.matrix[1][1]) / cmTotal * 100).toFixed(1);
 
   return (
     <div className="ml-matrix-wrap">
       <div className="ml-matrix-grid">
-
-        {/* Matrix */}
         <div className="ml-chart-box">
           <div className="ml-chart-header">
             <div>
@@ -22,7 +19,6 @@ function MatrixTab({ confusionMatrix }) {
             <div className="ml-matrix-axis-label ml-matrix-axis-label--left">Actual</div>
 
             <div className="ml-matrix-table-wrap">
-              {/* Column headers */}
               <div className="ml-matrix-col-headers">
                 <div className="ml-matrix-corner" />
                 {confusionMatrix.labels.map((l) => (
@@ -30,7 +26,6 @@ function MatrixTab({ confusionMatrix }) {
                 ))}
               </div>
 
-              {/* Rows */}
               {confusionMatrix.matrix.map((row, ri) => (
                 <div key={ri} className="ml-matrix-row">
                   <div className="ml-matrix-row-header">{confusionMatrix.labels[ri]}</div>
@@ -56,7 +51,6 @@ function MatrixTab({ confusionMatrix }) {
           </div>
         </div>
 
-        {/* Model performance stats */}
         <div className="ml-chart-box">
           <div className="ml-chart-header">
             <div>
@@ -86,7 +80,6 @@ function MatrixTab({ confusionMatrix }) {
             ))}
           </div>
 
-          {/* TP TN FP FN legend */}
           <div className="ml-matrix-legend">
             <div className="ml-matrix-legend-item ml-matrix-legend-item--tp">
               <strong>TP = {confusionMatrix.matrix[0][0]}</strong> True Positive
