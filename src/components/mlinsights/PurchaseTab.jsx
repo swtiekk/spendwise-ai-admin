@@ -104,7 +104,7 @@ const PurchaseTab = () => {
         verdict,
         followed,
         actuallyBought,
-        remainingBudget: Math.max(0, monthlyBudget - runningSpent)
+        remainingBudget: monthlyBudget - runningSpent
       };
     });
   }, [selectedUser]);
@@ -178,9 +178,9 @@ const PurchaseTab = () => {
               )}
 
               <div className="pt-daily-balance" style={{ 
-                background: log.remainingBudget < (income * 0.1) ? '#ef4444' : 'var(--sw-navy)' 
+                background: log.remainingBudget < 0 ? '#ef4444' : log.remainingBudget < (income * 0.1) ? '#f59e0b' : 'var(--sw-navy)' 
               }}>
-                <span>REMAINING POOL</span>
+                <span>{log.remainingBudget < 0 ? 'INSUFFICIENT BALANCE' : 'REMAINING BALANCE'}</span>
                 <strong>{formatCurrency(log.remainingBudget)}</strong>
               </div>
             </div>
@@ -215,13 +215,6 @@ const PurchaseTab = () => {
       </div>
 
       <div className="ml-chart-box">
-        <div className="ml-chart-header">
-          <div>
-            <h3 className="ml-chart-title">Anonymized Precise Monitoring</h3>
-            <p className="ml-chart-sub">Operational dashboard perfectly aligned with user spending data.</p>
-          </div>
-        </div>
-
         <div className="pt-user-list-header">
           <div>USER</div>
           <div>HEALTH</div>
@@ -243,9 +236,12 @@ const PurchaseTab = () => {
             return (
               <div key={user.id} className="pt-user-row">
                 <div className="pt-user-info">
-                  <div className="pt-user-avatar" style={{ background: '#f1f5f9', color: 'var(--sw-navy)' }}>{user.id}</div>
-                  <div className="pt-user-details">
-                    <span className="pt-user-name">ID: {user.id}</span>
+                  <div className="u-avatar">
+                    {user.avatar}
+                  </div>
+                  <div className="u-user-details-ml">
+                    <span className="u-name">ID: {user.id}</span>
+                    <span className="u-email">Anonymized User</span>
                   </div>
                 </div>
 

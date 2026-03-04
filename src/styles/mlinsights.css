@@ -608,6 +608,12 @@
   gap: 0.75rem;
 }
 
+.u-user-details-ml {
+  display: flex;
+  flex-direction: column;
+  margin-left: 0.25rem;
+}
+
 .pt-user-avatar {
   width: 36px;
   height: 36px;

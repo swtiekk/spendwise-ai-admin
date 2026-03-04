@@ -52,7 +52,7 @@ function MLInsights() {
           { key: "clusters",  label: "Cluster Distribution",icon: "◉" },
           { key: "patterns",  label: "Behavior Patterns",   icon: "📊" },
           { key: "matrix",    label: "Confusion Matrix",    icon: "🔢" },
-          { key: "planner",   label: "Purchase Advisor",    icon: "🛍️" },
+          { key: "planner",   label: "Budget Review",       icon: "🛍️" },
         ].map((tab) => (
           <button
             key={tab.key}
