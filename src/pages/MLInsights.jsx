@@ -12,6 +12,7 @@ import OverviewTab from "../components/mlinsights/OverviewTab";
 import ClustersTab from "../components/mlinsights/ClustersTab";
 import PatternsTab from "../components/mlinsights/PatternsTab";
 import MatrixTab from "../components/mlinsights/MatrixTab";
+import PurchaseTab from "../components/mlinsights/PurchaseTab";
 
 const confusionMatrix = {
   labels: ["Will Overspend", "Won't Overspend"],
@@ -51,6 +52,7 @@ function MLInsights() {
           { key: "clusters",  label: "Cluster Distribution",icon: "◉" },
           { key: "patterns",  label: "Behavior Patterns",   icon: "📊" },
           { key: "matrix",    label: "Confusion Matrix",    icon: "🔢" },
+          { key: "planner",   label: "Purchase Advisor",    icon: "🛍️" },
         ].map((tab) => (
           <button
             key={tab.key}
@@ -87,6 +89,10 @@ function MLInsights() {
         <MatrixTab 
           confusionMatrix={confusionMatrix} 
         />
+      )}
+
+      {activeTab === "planner" && (
+        <PurchaseTab />
       )}
     </AdminLayout>
   );
