@@ -1,6 +1,5 @@
-import { useState } from "react";
 import AdminLayout from "../components/layout/AdminLayout";
-import { mockUsers } from "../data/mockData";
+import { useUsers } from "../hooks/useUsers";
 import "../styles/users.css";
 
 const statusConfig = {
@@ -119,61 +118,20 @@ function UserDetailModal({ user, onClose, onDeactivate }) {
 }
 
 function Users() {
-  const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState("all");
-  const [selected, setSelected] = useState(null);
-  const [statusMessage, setStatusMessage] = useState("");
-
-  const [users, setUsers] = useState(mockUsers);
-
-  const deactivateUser = (id) => {
-    const updated = users.map((u) =>
-      u.id === id ? { ...u, status: "flagged" } : u
-    );
-    setUsers(updated);
-    setSelected(null);
-  };
-
-  const exportCSV = () => {
-    const headers = ["UserID", "Income", "Spent", "Savings", "Score", "Alerts"];
-    const rows = users.map((u) => [
-      u.id,
-      u.income,
-      u.spent,
-      u.savings,
-      u.spendingScore,
-      u.alerts
-    ]);
-
-    const csv =
-      "data:text/csv;charset=utf-8," +
-      [headers, ...rows].map((e) => e.join(",")).join("\n");
-
-    const link = document.createElement("a");
-    link.href = encodeURI(csv);
-    link.download = "users_report.csv";
-    link.click();
-  };
-
-  const refreshDataset = () => {
-    setStatusMessage("Dataset refreshed. ML retraining started.");
-  };
-
-  const filtered = users.filter((u) => {
-    const matchSearch =
-      u.name.toLowerCase().includes(search.toLowerCase()) ||
-      u.email.toLowerCase().includes(search.toLowerCase());
-
-    const matchFilter = filter === "all" || u.status === filter;
-    return matchSearch && matchFilter;
-  });
-
-  const counts = {
-    all: users.length,
-    active: users.filter((u) => u.status === "active").length,
-    warning: users.filter((u) => u.status === "warning").length,
-    flagged: users.filter((u) => u.status === "flagged").length
-  };
+  const {
+    search,
+    filter,
+    selected,
+    statusMessage,
+    filtered,
+    counts,
+    setSearch,
+    setFilter,
+    setSelected,
+    deactivateUser,
+    exportCSV,
+    refreshDataset,
+  } = useUsers();
 
   return (
     <AdminLayout>
@@ -194,19 +152,11 @@ function Users() {
             <span>{counts.flagged}</span> Flagged
           </div>
 
-          <button
-            type="button"
-            className="u-view-btn"
-            onClick={exportCSV}
-          >
+          <button type="button" className="u-view-btn" onClick={exportCSV}>
             Export CSV
           </button>
 
-          <button
-            type="button"
-            className="u-view-btn"
-            onClick={refreshDataset}
-          >
+          <button type="button" className="u-view-btn" onClick={refreshDataset}>
             Refresh Dataset
           </button>
         </div>
@@ -387,7 +337,7 @@ function Users() {
       </div>
 
       <p className="u-table-footer">
-        Showing {filtered.length} of {users.length} users
+        Showing {filtered.length} of {filtered.length > 0 ? filtered.length : 0} users
       </p>
 
       <UserDetailModal
