@@ -1,8 +1,8 @@
-import { useNavigate } from "react-router-dom";
 import { mockCategoryData } from "../../data/mockData";
+import useNavigateTo from "../../hooks/useNavigateTo";
 
 function DonutChart() {
-  const navigate = useNavigate();
+  const { goTo } = useNavigateTo();
   const total = mockCategoryData.reduce((s, d) => s + d.value, 0);
 
   const radius       = 70;
@@ -85,7 +85,7 @@ function DonutChart() {
         <button
           type="button"
           className="db-viewmore-btn"
-          onClick={() => navigate("/reports")}
+          onClick={() => goTo("/reports")}
           aria-label="View full spending report"
         >
           View Full Report

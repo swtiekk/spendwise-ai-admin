@@ -1,8 +1,8 @@
-import { useNavigate } from "react-router-dom";
 import { mockPredictionData } from "../../data/mockData";
+import useNavigateTo from "../../hooks/useNavigateTo";
 
 function SpendingChart() {
-  const navigate = useNavigate();
+  const { goTo } = useNavigateTo();
 
   const width = 500;
   const height = 160;
@@ -195,7 +195,7 @@ function SpendingChart() {
         <button
           type="button"
           className="db-viewmore-btn"
-          onClick={() => navigate("/reports")}
+          onClick={() => goTo("/reports")}
           aria-label="View full spending report"
         >
           View Full Report

@@ -1,5 +1,5 @@
-import { useNavigate } from "react-router-dom";
 import { mockMetrics } from "../../data/mockData";
+import useNavigateTo from "../../hooks/useNavigateTo";
 
 const icons = {
   users: (
@@ -41,11 +41,10 @@ const metricLinks = {
 };
 
 function MetricsGrid() {
-  const navigate = useNavigate();
+  const { goTo } = useNavigateTo();
 
   return (
     <section className="db-metrics-grid" aria-label="Overview metrics">
-      {/* FIX: key={metric.id} uses unique ID — not array index */}
       {mockMetrics.map((metric, i) => (
         <article
           key={metric.id}
@@ -66,17 +65,18 @@ function MetricsGrid() {
           </div>
           <p className="db-metric-value">{metric.value}</p>
           <p className="db-metric-label">{metric.label}</p>
-          <div className="db-metric-bar" role="progressbar" aria-valuenow={parseInt(metric.fill)} aria-valuemin={0} aria-valuemax={100}>
+          <div className="db-metric-bar" role="progressbar"
+            aria-valuenow={parseInt(metric.fill)}
+            aria-valuemin={0} aria-valuemax={100}>
             <div
               className="db-metric-bar-fill"
               style={{ width: metric.fill, background: metric.color }}
             />
           </div>
-          {/* FIX: type="button" added */}
           <button
             type="button"
             className="db-viewmore-btn"
-            onClick={() => navigate(metricLinks[metric.icon])}
+            onClick={() => goTo(metricLinks[metric.icon])}
             aria-label={`View more details for ${metric.label}`}
           >
             View More

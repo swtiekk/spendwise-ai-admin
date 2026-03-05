@@ -1,4 +1,5 @@
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink } from "react-router-dom";
+import useNavigateTo from "../../hooks/useNavigateTo";
 
 const navItems = [
   { to: "/dashboard",   icon: "⊞", label: "Dashboard"  },
@@ -8,7 +9,7 @@ const navItems = [
 ];
 
 function Sidebar() {
-  const navigate = useNavigate();
+  const { goTo } = useNavigateTo();
 
   return (
     <aside className="sidebar" aria-label="Admin sidebar navigation">
@@ -28,7 +29,6 @@ function Sidebar() {
         </div>
       </div>
 
-      {/* FIX: use <nav> semantic element with aria-label */}
       <nav className="sidebar-nav" aria-label="Main navigation">
         <p className="sidebar-nav-label" aria-hidden="true">Main Menu</p>
         {navItems.map((item) => (
@@ -54,11 +54,10 @@ function Sidebar() {
             <p className="sidebar-user-role">Super Admin</p>
           </div>
         </div>
-        {/* FIX: type="button" added, navigate used instead of NavLink for logout */}
         <button
           type="button"
           className="sidebar-logout"
-          onClick={() => navigate("/login")}
+          onClick={() => goTo("/login")}
           aria-label="Logout"
         >
           ⏻ Logout

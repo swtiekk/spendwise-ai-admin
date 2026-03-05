@@ -1,17 +1,13 @@
-import { useState } from "react";
 import AdminLayout from "../components/layout/AdminLayout";
 import MetricsGrid from "../components/dashboard/MetricsGrid";
 import AlertsPanel from "../components/dashboard/AlertsPanel";
 import SpendingChart from "../components/dashboard/SpendingChart";
 import DonutChart from "../components/dashboard/DonutChart";
 import "../styles/dashboard.css";
+import useDashboard from "../hooks/useDashboard";
 
 function Dashboard() {
-  const [showCharts, setShowCharts] = useState(true);
-
-  const hour = new Date().getHours();
-  const greeting =
-    hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+  const { showCharts, setShowCharts, greeting, today } = useDashboard();
 
   return (
     <AdminLayout>
@@ -20,21 +16,14 @@ function Dashboard() {
       <div className="db-banner" role="region" aria-label="Dashboard welcome banner">
         <div className="db-banner-left">
           <p className="db-banner-greeting">{greeting}, Admin 👋</p>
-          {/* FIX: h1 is the correct top-level heading inside main content */}
           <h1 className="db-banner-title">Admin Dashboard</h1>
-          <p className="db-banner-date">
-            {new Date().toLocaleDateString("en-US", {
-              weekday: "long", year: "numeric",
-              month: "long", day: "numeric",
-            })}
-          </p>
+          <p className="db-banner-date">{today}</p>
         </div>
         <div className="db-banner-right">
           <div className="db-banner-ai-badge" aria-label="AI Model status">
             <span className="db-banner-ai-dot" aria-hidden="true" />
             AI Model Active
           </div>
-          {/* FIX: type="button" added */}
           <button
             type="button"
             className={`db-toggle-btn ${!showCharts ? "db-toggle-btn--off" : ""}`}
@@ -64,7 +53,6 @@ function Dashboard() {
       </div>
 
       {/* ── Overview Metrics ── */}
-      {/* FIX: h2 under h1, correct heading hierarchy */}
       <h2 className="db-section-label">Overview Metrics</h2>
       <MetricsGrid />
 

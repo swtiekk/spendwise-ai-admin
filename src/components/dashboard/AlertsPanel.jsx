@@ -1,8 +1,8 @@
-import { useNavigate } from "react-router-dom";
 import { mockAlerts } from "../../data/mockData";
+import useNavigateTo from "../../hooks/useNavigateTo";
 
 function AlertsPanel() {
-  const navigate = useNavigate();
+  const { goTo } = useNavigateTo();
 
   return (
     <section className="db-alerts-panel" aria-label="Recent AI alerts">
@@ -16,7 +16,6 @@ function AlertsPanel() {
         </span>
       </div>
 
-      {/* FIX: key={alert.id} uses unique ID — not array index */}
       <ul className="db-alerts-list" aria-label="Alert list">
         {mockAlerts.slice(0, 4).map((alert) => (
           <li
@@ -42,11 +41,10 @@ function AlertsPanel() {
       </ul>
 
       <div className="db-chart-footer">
-        {/* FIX: type="button" added */}
         <button
           type="button"
           className="db-viewmore-btn"
-          onClick={() => navigate("/users")}
+          onClick={() => goTo("/users")}
           aria-label="View all users"
         >
           View All Users

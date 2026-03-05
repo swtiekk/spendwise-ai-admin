@@ -1,31 +1,17 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import "../styles/forms.css";
-import { adminAccount } from "../data/mockData";
+import useLogin from "../hooks/useLogin";
 
 function AdminLogin() {
-  const [email, setEmail]       = useState("");
-  const [password, setPassword] = useState("");
-  const [message, setMessage]   = useState("");
-  const [status, setStatus]     = useState("");
-
-  const navigate = useNavigate();
-
-  const handleLogin = (e) => {
-    e.preventDefault();
-    if (email === adminAccount.email && password === adminAccount.password) {
-      setStatus("success");
-      setMessage("Login successful! Redirecting…");
-      setTimeout(() => navigate("/dashboard"), 800);
-    } else {
-      setStatus("error");
-      setMessage("Invalid credentials. Please try again.");
-    }
-  };
+  const {
+    email, setEmail,
+    password, setPassword,
+    message,
+    status,
+    handleLogin,
+  } = useLogin();
 
   return (
     <main className="login-container">
-      {/* Background effects */}
       <div className="login-bg-mesh" aria-hidden="true" />
       <div className="login-bg-grid" aria-hidden="true" />
       <div className="login-orb login-orb--1" aria-hidden="true" />
@@ -46,7 +32,6 @@ function AdminLogin() {
                   <path d="M18 3l-2 4" />
                 </svg>
               </div>
-              {/* FIX: h1 is correct top-level heading for page identity */}
               <h1 className="login-brand-title">
                 Spend<span>Wise</span> AI
               </h1>
@@ -87,14 +72,12 @@ function AdminLogin() {
         <section className="login-panel-right" aria-label="Admin login form">
           <div className="login-form-header">
             <span className="login-tag">Admin Portal</span>
-            {/* FIX: h2 is correct here — sits under h1 in the branding panel */}
             <h2>Welcome back</h2>
             <p>Sign in to access your dashboard</p>
           </div>
 
           <form onSubmit={handleLogin} className="login-form" noValidate aria-label="Login">
             <div className="login-form-group">
-              {/* GOOD: label + htmlFor already correct */}
               <label htmlFor="email">Email address</label>
               <div className="login-input-wrap">
                 <svg className="login-input-icon" viewBox="0 0 24 24" fill="none"
@@ -138,7 +121,6 @@ function AdminLogin() {
               </div>
             </div>
 
-            {/* FIX: type="submit" explicitly set */}
             <button type="submit" className="login-btn">
               Sign in to Dashboard →
             </button>
