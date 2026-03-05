@@ -12,7 +12,7 @@ import OverviewTab from "../components/mlinsights/OverviewTab";
 import ClustersTab from "../components/mlinsights/ClustersTab";
 import PatternsTab from "../components/mlinsights/PatternsTab";
 import MatrixTab from "../components/mlinsights/MatrixTab";
-import PurchaseTab from "../components/mlinsights/PurchaseTab";
+import BudgetTab from "../components/mlinsights/BudgetTab";
 
 const confusionMatrix = {
   labels: ["Will Overspend", "Won't Overspend"],
@@ -92,7 +92,7 @@ function MLInsights() {
       )}
 
       {activeTab === "planner" && (
-        <PurchaseTab />
+        <BudgetTab />
       )}
     </AdminLayout>
   );

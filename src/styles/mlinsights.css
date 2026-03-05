@@ -363,8 +363,8 @@
 .ml-matrix-legend-item--fp { border-color: rgba(239,68,68,0.2) !important; }
 .ml-matrix-legend-item--fn { border-color: rgba(239,68,68,0.2) !important; }
 
-/* PurchaseTab (Admin View) Component Styles */
-.purchase-tab-container {
+/* BudgetTab (Admin View) Component Styles */
+.budget-tab-container {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
