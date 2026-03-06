@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import AdminLayout from "../components/layout/AdminLayout";
 import {
   mockMLMetrics,
@@ -14,7 +14,7 @@ import PatternsTab from "../components/mlinsights/PatternsTab";
 import MatrixTab from "../components/mlinsights/MatrixTab";
 import BudgetTab from "../components/mlinsights/BudgetTab";
 
-const confusionMatrix = {
+const CONFUSION_MATRIX = {
   labels: ["Will Overspend", "Won't Overspend"],
   matrix: [
     [142, 18],
@@ -25,75 +25,84 @@ const confusionMatrix = {
 function MLInsights() {
   const [activeTab, setActiveTab] = useState("overview");
 
-  const cmTotal = confusionMatrix.matrix.flat().reduce((a, b) => a + b, 0);
-  const cmAccuracy = ((confusionMatrix.matrix[0][0] + confusionMatrix.matrix[1][1]) / cmTotal * 100).toFixed(1);
+  const cmAccuracy = useMemo(() => {
+    const total = CONFUSION_MATRIX.matrix.flat().reduce((a, b) => a + b, 0);
+    return ((CONFUSION_MATRIX.matrix[0][0] + CONFUSION_MATRIX.matrix[1][1]) / total * 100).toFixed(1);
+  }, []);
+
+  const tabs = useMemo(() => [
+    { key: "overview",  label: "Overview",             icon: "⊞" },
+    { key: "clusters",  label: "Cluster Distribution", icon: "◉" },
+    { key: "patterns",  label: "Behavior Patterns",    icon: "📊" },
+    { key: "matrix",    label: "Confusion Matrix",     icon: "🔢" },
+    { key: "planner",   label: "Budget Review",        icon: "🛍️" },
+  ], []);
 
   return (
     <AdminLayout>
-      <section className="ml-header">
-        <div>
+      <header className="ml-header">
+        <hgroup>
           <p className="ml-header-sub">AI-Powered Analytics</p>
-          <h2 className="ml-header-title">ML Insights</h2>
-        </div>
+          <h1 className="ml-header-title">ML Insights</h1>
+        </hgroup>
         <div className="ml-header-right">
-          <div className="ml-model-tag">
-            <span className="ml-model-dot" />
+          <div className="ml-model-tag" role="status">
+            <span className="ml-model-dot" aria-hidden="true" />
             Model Active · Random Forest v2.1
           </div>
-          <div className="ml-accuracy-badge">
+          <data value={cmAccuracy} className="ml-accuracy-badge">
             🎯 {cmAccuracy}% Accuracy
-          </div>
+          </data>
         </div>
-      </section>
+      </header>
 
-      <div className="ml-tabs">
-        {[
-          { key: "overview",  label: "Overview",            icon: "⊞" },
-          { key: "clusters",  label: "Cluster Distribution",icon: "◉" },
-          { key: "patterns",  label: "Behavior Patterns",   icon: "📊" },
-          { key: "matrix",    label: "Confusion Matrix",    icon: "🔢" },
-          { key: "planner",   label: "Budget Review",       icon: "🛍️" },
-        ].map((tab) => (
+      <nav className="ml-tabs" aria-label="Insights categories">
+        {tabs.map((tab) => (
           <button
             key={tab.key}
+            type="button"
             className={`ml-tab ${activeTab === tab.key ? "ml-tab--active" : ""}`}
             onClick={() => setActiveTab(tab.key)}
+            aria-selected={activeTab === tab.key}
+            role="tab"
           >
-            <span>{tab.icon}</span>
+            <span aria-hidden="true">{tab.icon}</span>
             {tab.label}
           </button>
         ))}
-      </div>
+      </nav>
 
-      {activeTab === "overview" && (
-        <OverviewTab 
-          mockMLMetrics={mockMLMetrics} 
-          mockPredictionData={mockPredictionData} 
-          mockTopFlagged={mockTopFlagged} 
-        />
-      )}
+      <section className="ml-content-area" aria-live="polite">
+        {activeTab === "overview" && (
+          <OverviewTab 
+            mockMLMetrics={mockMLMetrics} 
+            mockPredictionData={mockPredictionData} 
+            mockTopFlagged={mockTopFlagged} 
+          />
+        )}
 
-      {activeTab === "clusters" && (
-        <ClustersTab 
-          mockCategoryData={mockCategoryData} 
-        />
-      )}
+        {activeTab === "clusters" && (
+          <ClustersTab 
+            mockCategoryData={mockCategoryData} 
+          />
+        )}
 
-      {activeTab === "patterns" && (
-        <PatternsTab 
-          mockBehaviorPatterns={mockBehaviorPatterns} 
-        />
-      )}
+        {activeTab === "patterns" && (
+          <PatternsTab 
+            mockBehaviorPatterns={mockBehaviorPatterns} 
+          />
+        )}
 
-      {activeTab === "matrix" && (
-        <MatrixTab 
-          confusionMatrix={confusionMatrix} 
-        />
-      )}
+        {activeTab === "matrix" && (
+          <MatrixTab 
+            confusionMatrix={CONFUSION_MATRIX} 
+          />
+        )}
 
-      {activeTab === "planner" && (
-        <BudgetTab />
-      )}
+        {activeTab === "planner" && (
+          <BudgetTab />
+        )}
+      </section>
     </AdminLayout>
   );
 }
