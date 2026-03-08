@@ -1,13 +1,13 @@
-import { useState, useMemo } from "react";
+import { useMLInsights } from "../../hooks/usemlinsight";
 
 function OverviewTab({ mockMLMetrics, mockPredictionData, mockTopFlagged }) {
-  const [selectedBar, setSelectedBar] = useState(null);
-  const [hoveredBar, setHoveredBar] = useState(null);
-
-  const maxPredicted = useMemo(() => 
-    Math.max(...mockPredictionData.map((d) => Math.max(d.actual || 0, d.predicted))),
-    [mockPredictionData]
-  );
+  const {
+    selectedBar,
+    setSelectedBar,
+    hoveredBar,
+    setHoveredBar,
+    maxPredicted
+  } = useMLInsights();
 
   return (
     <>

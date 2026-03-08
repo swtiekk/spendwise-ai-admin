@@ -1,23 +1,13 @@
-import { useState, useMemo } from "react";
-
-const CLUSTER_DATA = [
-  { label: "Savers",       value: 312, color: "#2DD4BF", desc: "Consistently under budget, high savings rate" },
-  { label: "Balanced",     value: 487, color: "#6366F1", desc: "Moderate spending, occasional alerts" },
-  { label: "Impulsive",    value: 284, color: "#F59E0B", desc: "Frequent unplanned purchases detected" },
-  { label: "At-Risk",      value: 201, color: "#ef4444", desc: "Exceeding budget, multiple alerts flagged" },
-];
+import { useMLInsights, CLUSTER_DATA } from "../../hooks/usemlinsight";
 
 function ClustersTab({ mockCategoryData }) {
-  const [selectedCluster, setSelectedCluster] = useState(null);
-
-  const { maxCluster, totalClusters } = useMemo(() => ({
-    maxCluster: Math.max(...CLUSTER_DATA.map((d) => d.value)),
-    totalClusters: CLUSTER_DATA.reduce((s, d) => s + d.value, 0)
-  }), []);
-
-  const handleClusterToggle = (cluster) => {
-    setSelectedCluster(selectedCluster?.label === cluster.label ? null : cluster);
-  };
+  const {
+    selectedCluster,
+    setSelectedCluster,
+    maxCluster,
+    totalClusters,
+    handleClusterToggle
+  } = useMLInsights();
 
   return (
     <div className="ml-clusters-wrap">

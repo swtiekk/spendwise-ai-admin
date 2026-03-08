@@ -1,18 +1,11 @@
-import { useMemo } from "react";
+import { useMLInsights } from "../../hooks/usemlinsight";
 
 function MatrixTab({ confusionMatrix }) {
-  const { cmTotal, cmAccuracy } = useMemo(() => {
-    const total = confusionMatrix.matrix.flat().reduce((a, b) => a + b, 0);
-    const accuracy = ((confusionMatrix.matrix[0][0] + confusionMatrix.matrix[1][1]) / total * 100).toFixed(1);
-    return { cmTotal: total, cmAccuracy: accuracy };
-  }, [confusionMatrix]);
-
-  const performanceMetrics = useMemo(() => [
-    { label: "Accuracy",  value: `${cmAccuracy}%`, color: "#2DD4BF", desc: "Overall correct predictions",       formula: "(TP+TN) / Total" },
-    { label: "Precision", value: "92.8%",           color: "#6366F1", desc: "Of predicted overspend, how many were right", formula: "TP / (TP+FP)" },
-    { label: "Recall",    value: "88.7%",           color: "#F59E0B", desc: "Of actual overspend, how many were caught",   formula: "TP / (TP+FN)" },
-    { label: "F1 Score",  value: "90.7%",           color: "#1A2B47", desc: "Balance between precision and recall",  formula: "2×(P×R)/(P+R)" },
-  ], [cmAccuracy]);
+  const {
+    cmTotal,
+    cmAccuracy,
+    performanceMetrics
+  } = useMLInsights();
 
   return (
     <div className="ml-matrix-wrap">

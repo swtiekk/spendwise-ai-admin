@@ -1,25 +1,13 @@
-import { useState, useMemo } from "react";
-
-const RISK_CONFIG = {
-  high:   { color: "#ef4444", bg: "rgba(239,68,68,0.1)",   label: "High"   },
-  medium: { color: "#F59E0B", bg: "rgba(245,158,11,0.1)",   label: "Medium" },
-  low:    { color: "#2DD4BF", bg: "rgba(45,212,191,0.1)",   label: "Low"    },
-};
+import { useMLInsights, RISK_CONFIG } from "../../hooks/usemlinsight";
 
 function PatternsTab({ mockBehaviorPatterns }) {
-  const [riskFilter, setRiskFilter] = useState("all");
-  const [selectedPattern, setSelectedPattern] = useState(null);
-
-  const filteredPatterns = useMemo(() => 
-    riskFilter === "all"
-      ? mockBehaviorPatterns
-      : mockBehaviorPatterns.filter((p) => p.risk === riskFilter),
-    [mockBehaviorPatterns, riskFilter]
-  );
-
-  const handlePatternToggle = (pattern) => {
-    setSelectedPattern(selectedPattern?.pattern === pattern.pattern ? null : pattern);
-  };
+  const {
+    riskFilter,
+    setRiskFilter,
+    selectedPattern,
+    filteredPatterns,
+    handlePatternToggle
+  } = useMLInsights();
 
   return (
     <div className="ml-patterns-wrap">

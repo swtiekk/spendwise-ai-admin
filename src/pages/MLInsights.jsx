@@ -1,42 +1,24 @@
-import { useState, useMemo } from "react";
 import AdminLayout from "../components/layout/AdminLayout";
-import {
-  mockMLMetrics,
-  mockBehaviorPatterns,
-  mockPredictionData,
-  mockTopFlagged,
-  mockCategoryData,
-} from "../data/mockData";
 import "../styles/mlinsights.css";
 import OverviewTab from "../components/mlinsights/OverviewTab";
 import ClustersTab from "../components/mlinsights/ClustersTab";
 import PatternsTab from "../components/mlinsights/PatternsTab";
 import MatrixTab from "../components/mlinsights/MatrixTab";
 import BudgetTab from "../components/mlinsights/BudgetTab";
-
-const CONFUSION_MATRIX = {
-  labels: ["Will Overspend", "Won't Overspend"],
-  matrix: [
-    [142, 18],
-    [11, 329],
-  ],
-};
+import { useMLInsights, CONFUSION_MATRIX } from "../hooks/usemlinsight";
 
 function MLInsights() {
-  const [activeTab, setActiveTab] = useState("overview");
-
-  const cmAccuracy = useMemo(() => {
-    const total = CONFUSION_MATRIX.matrix.flat().reduce((a, b) => a + b, 0);
-    return ((CONFUSION_MATRIX.matrix[0][0] + CONFUSION_MATRIX.matrix[1][1]) / total * 100).toFixed(1);
-  }, []);
-
-  const tabs = useMemo(() => [
-    { key: "overview",  label: "Overview",             icon: "⊞" },
-    { key: "clusters",  label: "Cluster Distribution", icon: "◉" },
-    { key: "patterns",  label: "Behavior Patterns",    icon: "📊" },
-    { key: "matrix",    label: "Confusion Matrix",     icon: "🔢" },
-    { key: "planner",   label: "Budget Review",        icon: "🛍️" },
-  ], []);
+  const {
+    activeTab,
+    setActiveTab,
+    cmAccuracy,
+    tabs,
+    mockMLMetrics,
+    mockPredictionData,
+    mockTopFlagged,
+    mockCategoryData,
+    mockBehaviorPatterns,
+  } = useMLInsights();
 
   return (
     <AdminLayout>

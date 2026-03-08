@@ -1,19 +1,17 @@
-import React, { useState, useMemo } from 'react';
-import { mockUsers } from '../../data/mockData';
+import React from 'react';
+import { useMLInsights } from '../../hooks/usemlinsight';
 
 const BudgetTab = () => {
-  const [selectedUser, setSelectedUser] = useState(null);
-
-  // Helper functions
-  const parseCurrency = (str) => {
-    if (!str) return 0;
-    return Number(str.replace(/[^0-9.-]+/g, ""));
-  };
-
-  const formatCurrency = (val) => new Intl.NumberFormat('en-PH', {
-    style: 'currency',
-    currency: 'PHP',
-  }).format(val);
+  const {
+    mockUsers,
+    selectedUser,
+    setSelectedUser,
+    expandedDays,
+    toggleDayExpansion,
+    parseCurrency,
+    formatCurrency,
+    dailyLog
+  } = useMLInsights();
 
   const SR_ONLY_STYLE = {
     position: 'absolute',
@@ -27,24 +25,9 @@ const BudgetTab = () => {
     border: '0',
   };
 
-  const ITEM_POOL = [
-    { name: "Starbucks Latte", category: "Dining", icon: "☕" },
-    { name: "Netflix Subscription", category: "Sub", icon: "🎬" },
-    { name: "Shell Gasoline", category: "Transport", icon: "⛽" },
-    { name: "Jollibee Meal", category: "Dining", icon: "🍗" },
-    { name: "Shopee Item", category: "Shopping", icon: "📦" },
-    { name: "Internet Bill", category: "Bills", icon: "🌐" },
-    { name: "Uniqlo Wear", category: "Shopping", icon: "👕" },
-    { name: "GrabFood", category: "Dining", icon: "🛵" },
-    { name: "7-Eleven Snack", category: "Dining", icon: "🏪" },
-    { name: "Lazada Delivery", category: "Shopping", icon: "🚚" },
-    { name: "Spotify Premium", category: "Sub", icon: "🎵" },
-    { name: "Cinema Ticket", category: "Entertainment", icon: "🎟️" }
-  ];
-
   // Sub-component: DayCard
   const DayCard = ({ log }) => {
-    const [isExpanded, setIsExpanded] = useState(false);
+    const isExpanded = !!expandedDays[log.day];
     const visibleItems = isExpanded ? log.transactions : log.transactions.slice(0, 2);
     const hasMore = log.transactions.length > 2;
 
@@ -110,7 +93,7 @@ const BudgetTab = () => {
               {hasMore && (
                 <button 
                   type="button" 
-                  onClick={() => setIsExpanded(!isExpanded)}
+                  onClick={() => toggleDayExpansion(log.day)}
                   style={{ 
                     width: '100%', 
                     background: 'none', 
@@ -149,125 +132,6 @@ const BudgetTab = () => {
       </article>
     );
   };
-
-  /**
-   * Generates a 30-day log where spending only decrements the budget
-   * if the user actually spent the money.
-   * AI will say "NO" automatically if budget is insufficient.
-   */
-  const dailyLog = useMemo(() => {
-    if (!selectedUser) return [];
-    
-    const monthlyBudget = parseCurrency(selectedUser.income);
-    const totalActualSpent = parseCurrency(selectedUser.spent);
-    const transactionDaysCount = Math.min(selectedUser.transactions || 20, 30);
-    
-    const dayIndices = Array.from({ length: 30 }, (_, i) => i);
-    const dailyActualSpentAmounts = new Array(30).fill(0);
-    
-    // Shuffle indices to distribute totalActualSpent
-    for (let i = dayIndices.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [dayIndices[i], dayIndices[j]] = [dayIndices[j], dayIndices[i]];
-    }
-    
-    let remainingToDistribute = totalActualSpent;
-    const activeDayIndices = dayIndices.slice(0, transactionDaysCount);
-    activeDayIndices.sort((a, b) => a - b);
-    const avgDailySpend = totalActualSpent / transactionDaysCount;
-
-    activeDayIndices.forEach((idx, i) => {
-      if (i === activeDayIndices.length - 1) {
-        dailyActualSpentAmounts[idx] = remainingToDistribute;
-      } else {
-        const amount = Math.round(avgDailySpend * (0.6 + Math.random() * 0.8));
-        const finalAmount = Math.min(amount, remainingToDistribute);
-        dailyActualSpentAmounts[idx] = finalAmount;
-        remainingToDistribute -= finalAmount;
-      }
-    });
-
-    let runningSpent = 0;
-
-    return Array.from({ length: 30 }, (_, i) => {
-      const day = i + 1;
-      const targetSpend = dailyActualSpentAmounts[i];
-      const transactions = [];
-      let dayActualTotal = 0;
-
-      // 1. Generate Actual Spends
-      if (targetSpend > 0) {
-        const itemCount = Math.floor(Math.random() * 2) + 1;
-        let remainingInDay = targetSpend;
-
-        for (let j = 0; j < itemCount; j++) {
-          const itemTemplate = ITEM_POOL[Math.floor(Math.random() * ITEM_POOL.length)];
-          const price = (j === itemCount - 1) ? remainingInDay : Math.round((targetSpend / itemCount) * (0.8 + Math.random() * 0.4));
-          remainingInDay -= price;
-
-          // AI RULE: If budget is insufficient, always say NO
-          const isInsufficient = (runningSpent + price) > monthlyBudget;
-          let verdict = "YES";
-          let followed = true;
-
-          if (isInsufficient) {
-            verdict = "NO";
-            followed = false; // They spent it anyway (ignored AI)
-          } else {
-            const isNo = Math.random() > (selectedUser.spendingScore / 100) + 0.2;
-            verdict = isNo ? "NO" : "YES";
-            followed = !isNo;
-          }
-
-          transactions.push({
-            id: `day${day}-spend-${j}`,
-            ...itemTemplate,
-            price,
-            verdict,
-            followed,
-            isSaving: false
-          });
-          
-          runningSpent += price;
-          dayActualTotal += price;
-        }
-      }
-
-      // 2. Generate "Potential Savings" (AI said NO and user followed)
-      const savingsCount = Math.floor(Math.random() * 2); 
-      for (let s = 0; s < savingsCount; s++) {
-        const itemTemplate = ITEM_POOL[Math.floor(Math.random() * ITEM_POOL.length)];
-        const price = Math.round(avgDailySpend * (0.3 + Math.random() * 0.7));
-
-        // AI RULE: If budget is insufficient, always say NO
-        const isInsufficient = (runningSpent + price) > monthlyBudget;
-        const verdict = isInsufficient ? "NO" : (Math.random() > 0.5 ? "NO" : "YES");
-        
-        // Potential savings are only shown if AI says NO and user "follows"
-        if (verdict === "NO") {
-          transactions.push({
-            id: `day${day}-save-${s}`,
-            ...itemTemplate,
-            price,
-            verdict: "NO",
-            followed: true,
-            isSaving: true
-          });
-          // Budget does NOT decrement because user followed the "NO"
-        }
-      }
-
-      transactions.sort(() => Math.random() - 0.5);
-
-      return {
-        day,
-        hasActivity: transactions.length > 0,
-        transactions,
-        dayTotal: dayActualTotal,
-        remainingBudget: monthlyBudget - runningSpent
-      };
-    });
-  }, [selectedUser]);
 
   if (selectedUser) {
     const income = parseCurrency(selectedUser.income);
