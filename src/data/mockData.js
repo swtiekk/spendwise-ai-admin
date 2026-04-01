@@ -1,5 +1,5 @@
 export const adminAccount = {
-  email: "admin@amdin.com",
+  email: "admin@admin.com",
   password: "admin123",
   role: "System Administrator"
 };
