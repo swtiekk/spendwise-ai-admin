@@ -1,5 +1,5 @@
 export const adminAccount = {
-  email: "admin@spendwise.ai",
+  email: "admin@amdin.com",
   password: "admin123",
   role: "System Administrator"
 };
