@@ -1,43 +1,60 @@
-import { mockAlerts } from "../../data/mockData";
 import useNavigateTo from "../../hooks/useNavigateTo";
 
-function AlertsPanel() {
+function AlertsPanel({ dashData }) {
   const { goTo } = useNavigateTo();
 
+  // Build cluster distribution as alerts since backend has no alerts endpoint on admin dashboard
+  const clusterEntries = dashData?.cluster_distribution
+    ? Object.entries(dashData.cluster_distribution)
+    : [];
+
+  const clusterColors = {
+    "Balanced":          { type: "info",    icon: "⚖️" },
+    "Impulsive":         { type: "warning", icon: "⚡" },
+    "Conservative Saver":{ type: "success", icon: "✅" },
+    "High-Risk Spender": { type: "danger",  icon: "🚨" },
+  };
+
   return (
-    <section className="db-alerts-panel" aria-label="Recent AI alerts">
+    <section className="db-alerts-panel" aria-label="Cluster distribution">
       <div className="db-alerts-header">
         <div>
-          <h3 className="db-alerts-title">Recent AI Alerts</h3>
-          <p className="db-alerts-sub">AI-generated spending warnings</p>
+          <h3 className="db-alerts-title">User Cluster Distribution</h3>
+          <p className="db-alerts-sub">AI-generated spending behavior groups</p>
         </div>
-        <span className="db-alerts-count" aria-label={`${mockAlerts.length} active alerts`}>
-          {mockAlerts.length} active
+        <span className="db-alerts-count" aria-label={`${clusterEntries.length} clusters`}>
+          {clusterEntries.length} clusters
         </span>
       </div>
 
-      <ul className="db-alerts-list" aria-label="Alert list">
-        {mockAlerts.slice(0, 4).map((alert) => (
-          <li
-            key={alert.id}
-            className={`db-alert-item db-alert-item--${alert.type}`}
-            aria-label={`${alert.type} alert for ${alert.user}`}
-          >
-            <span className="db-alert-icon" aria-hidden="true">{alert.icon}</span>
-            <div className="db-alert-body">
-              <p className="db-alert-name">{alert.user}</p>
-              <p className="db-alert-msg">{alert.message}</p>
-            </div>
-            <div className="db-alert-right">
-              <span className={`db-alert-badge db-alert-badge--${alert.type}`}>
-                {alert.type}
-              </span>
-              <span className="db-alert-time">
-                <time>{alert.time}</time>
-              </span>
-            </div>
+      <ul className="db-alerts-list" aria-label="Cluster list">
+        {clusterEntries.length === 0 ? (
+          <li className="db-alert-item">
+            <p style={{ color: '#94a3b8', padding: '1rem' }}>No cluster data available.</p>
           </li>
-        ))}
+        ) : (
+          clusterEntries.map(([cluster, count]) => {
+            const cfg = clusterColors[cluster] ?? { type: "info", icon: "👤" };
+            return (
+              <li
+                key={cluster}
+                className={`db-alert-item db-alert-item--${cfg.type}`}
+                aria-label={`${cluster}: ${count} users`}
+              >
+                <span className="db-alert-icon" aria-hidden="true">{cfg.icon}</span>
+                <div className="db-alert-body">
+                  <p className="db-alert-name">{cluster}</p>
+                  <p className="db-alert-msg">{count} users in this group</p>
+                </div>
+                <div className="db-alert-right">
+                  <span className={`db-alert-badge db-alert-badge--${cfg.type}`}>
+                    {count}
+                  </span>
+                </div>
+              </li>
+            );
+          })
+        )}
       </ul>
 
       <div className="db-chart-footer">

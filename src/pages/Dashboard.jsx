@@ -7,7 +7,7 @@ import "../styles/dashboard.css";
 import useDashboard from "../hooks/useDashboard";
 
 function Dashboard() {
-  const { showCharts, setShowCharts, greeting, today } = useDashboard();
+  const { showCharts, setShowCharts, greeting, today, dashData, loading } = useDashboard();
 
   return (
     <AdminLayout>
@@ -22,7 +22,7 @@ function Dashboard() {
         <div className="db-banner-right">
           <div className="db-banner-ai-badge" aria-label="AI Model status">
             <span className="db-banner-ai-dot" aria-hidden="true" />
-            AI Model Active
+            {loading ? "Loading..." : "AI Model Active"}
           </div>
           <button
             type="button"
@@ -54,7 +54,7 @@ function Dashboard() {
 
       {/* ── Overview Metrics ── */}
       <h2 className="db-section-label">Overview Metrics</h2>
-      <MetricsGrid />
+      <MetricsGrid dashData={dashData} />
 
       {/* ── Charts ── */}
       {showCharts && (
@@ -67,9 +67,9 @@ function Dashboard() {
         </section>
       )}
 
-      {/* ── Alerts ── */}
-      <h2 className="db-section-label">Recent AI Alerts</h2>
-      <AlertsPanel />
+      {/* ── Cluster Distribution ── */}
+      <h2 className="db-section-label">User Clusters</h2>
+      <AlertsPanel dashData={dashData} />
 
     </AdminLayout>
   );

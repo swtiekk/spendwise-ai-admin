@@ -1,15 +1,13 @@
 import { useState, useMemo, useEffect } from "react";
-
-const BASE_URL = 'http://192.168.1.5:8000/api';
-const getToken = () => localStorage.getItem('adminToken');
+import { BASE_URL, getToken } from "../config";
 
 export function useUsers() {
-  const [users, setUsers]               = useState([]);
-  const [search, setSearch]             = useState("");
-  const [filter, setFilter]             = useState("all");
-  const [selected, setSelected]         = useState(null);
+  const [users, setUsers]                 = useState([]);
+  const [search, setSearch]               = useState("");
+  const [filter, setFilter]               = useState("all");
+  const [selected, setSelected]           = useState(null);
   const [statusMessage, setStatusMessage] = useState("");
-  const [loading, setLoading]           = useState(true);
+  const [loading, setLoading]             = useState(true);
 
   useEffect(() => {
     fetchUsers();
@@ -40,7 +38,7 @@ export function useUsers() {
   const exportCSV = () => {
     const headers = ["UserID", "Name", "Email", "Cluster", "Risk Level"];
     const rows = users.map(u => [
-      u.id, u.name, u.email, u.cluster, u.risk_level
+      u.id, u.name, u.email, u.cluster ?? 'N/A', u.risk_level ?? 'N/A'
     ]);
     const csv = "data:text/csv;charset=utf-8," +
       [headers, ...rows].map(e => e.join(",")).join("\n");
@@ -67,9 +65,9 @@ export function useUsers() {
 
   const counts = useMemo(() => ({
     all:     users.length,
-    safe:    users.filter(u => u.risk_level === "safe").length,
-    caution: users.filter(u => u.risk_level === "caution").length,
-    danger:  users.filter(u => u.risk_level === "danger").length,
+    low:     users.filter(u => u.risk_level === "low").length,
+    medium:  users.filter(u => u.risk_level === "medium").length,
+    high:    users.filter(u => u.risk_level === "high").length,
   }), [users]);
 
   return {

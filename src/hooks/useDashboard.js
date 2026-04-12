@@ -1,7 +1,5 @@
 import { useState, useEffect } from "react";
-
-const BASE_URL = 'http://192.168.254.120:8000/api';
-const getToken = () => localStorage.getItem('adminToken');
+import { BASE_URL, getToken } from "../config";
 
 function useDashboard() {
   const [showCharts, setShowCharts] = useState(true);
@@ -41,6 +39,7 @@ function useDashboard() {
     today,
     dashData,
     loading,
+    refresh: fetchDashboard,
   };
 }
 

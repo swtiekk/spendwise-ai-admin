@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-
-const BASE_URL = 'http://192.168.254.120:8000/api'; // ← same IP as mobile
+import { BASE_URL } from "../config";
 
 function useLogin() {
   const [email, setEmail]       = useState("");

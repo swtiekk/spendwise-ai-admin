@@ -2,119 +2,14 @@ import AdminLayout from "../components/layout/AdminLayout";
 import { useUsers } from "../hooks/useUsers";
 import "../styles/users.css";
 
-const statusConfig = {
-  active:  { label: "Active",  color: "#0d9488", bg: "rgba(45,212,191,0.12)"  },
-  warning: { label: "Warning", color: "#b45309", bg: "rgba(245,158,11,0.12)" },
-  flagged: { label: "Flagged", color: "#b91c1c", bg: "rgba(239,68,68,0.12)"  },
+const riskConfig = {
+  low:    { label: "Low",    color: "#0d9488", bg: "rgba(45,212,191,0.12)"  },
+  medium: { label: "Medium", color: "#b45309", bg: "rgba(245,158,11,0.12)" },
+  high:   { label: "High",   color: "#b91c1c", bg: "rgba(239,68,68,0.12)"  },
 };
 
-const scoreColor = (s) => s >= 80 ? "#2DD4BF" : s >= 50 ? "#F59E0B" : "#ef4444";
-
-function UserDetailModal({ user, onClose, onDeactivate }) {
-  if (!user) return null;
-
-  return (
-    <div className="u-modal-overlay" onClick={onClose}>
-      <div className="u-modal" onClick={(e) => e.stopPropagation()}>
-        <button
-          type="button"
-          className="u-modal-close"
-          onClick={onClose}
-          aria-label="Close modal"
-        >
-          <span aria-hidden="true">✕</span>
-        </button>
-
-        <div className="u-modal-header">
-          <div className="u-modal-avatar">{user.avatar}</div>
-          <div>
-            <h2 className="u-modal-name">{user.name}</h2>
-            <p className="u-modal-email">{user.email}</p>
-            <span
-              className="u-status-badge"
-              style={{
-                color: statusConfig[user.status].color,
-                background: statusConfig[user.status].bg
-              }}
-            >
-              {statusConfig[user.status].label}
-            </span>
-          </div>
-        </div>
-
-        <button
-          type="button"
-          className="u-view-btn"
-          style={{ marginTop: "1rem" }}
-          onClick={() => onDeactivate(user.id)}
-        >
-          Deactivate Account
-        </button>
-
-        <div className="u-modal-score-row">
-          <div className="u-modal-score-wrap">
-            <p className="u-modal-score-label">AI Spending Score</p>
-            <p
-              className="u-modal-score-value"
-              style={{ color: scoreColor(user.spendingScore) }}
-            >
-              {user.spendingScore}<span>/100</span>
-            </p>
-            <div className="u-modal-score-bar">
-              <div
-                style={{
-                  width: `${user.spendingScore}%`,
-                  background: scoreColor(user.spendingScore)
-                }}
-              />
-            </div>
-          </div>
-
-          <div className="u-modal-alerts-wrap">
-            <p className="u-modal-score-label">Active Alerts</p>
-            <p
-              className="u-modal-alert-count"
-              style={{
-                color:
-                  user.alerts > 2
-                    ? "#ef4444"
-                    : user.alerts > 0
-                    ? "#F59E0B"
-                    : "#2DD4BF"
-              }}
-            >
-              {user.alerts}
-            </p>
-          </div>
-        </div>
-
-        <div className="u-modal-stats">
-          {[
-            { label: "Monthly Income", value: user.income },
-            { label: "Total Spent", value: user.spent },
-            { label: "Savings", value: user.savings },
-            { label: "Income Type", value: user.incomeType },
-            { label: "Age", value: `${user.age} yrs` },
-            { label: "Member Since", value: user.joined }
-          ].map((s) => (
-            <div key={s.label} className="u-modal-stat">
-              <p className="u-modal-stat-label">{s.label}</p>
-              <p className="u-modal-stat-value">{s.value}</p>
-            </div>
-          ))}
-        </div>
-
-        <div className="u-modal-bio">
-          <p className="u-modal-bio-label">Transaction Summary</p>
-          <p>Total Transactions: {user.transactions}</p>
-          <p>
-            Avg per Transaction: ₱
-            {(user.spent / user.transactions).toFixed(2)}
-          </p>
-        </div>
-      </div>
-    </div>
-  );
+function getRiskConfig(riskLevel) {
+  return riskConfig[riskLevel?.toLowerCase()] ?? riskConfig.low;
 }
 
 function Users() {
@@ -122,15 +17,15 @@ function Users() {
     search,
     filter,
     selected,
+    setSelected,
     statusMessage,
     filtered,
     counts,
     setSearch,
     setFilter,
-    setSelected,
-    deactivateUser,
     exportCSV,
     refreshDataset,
+    loading,
   } = useUsers();
 
   return (
@@ -143,52 +38,39 @@ function Users() {
 
         <div className="u-header-stats">
           <div className="u-stat-pill u-stat-pill--teal">
-            <span>{counts.active}</span> Active
+            <span>{counts.all}</span> Total
+          </div>
+          <div className="u-stat-pill u-stat-pill--teal">
+            <span>{counts.low}</span> Low Risk
           </div>
           <div className="u-stat-pill u-stat-pill--amber">
-            <span>{counts.warning}</span> Warning
+            <span>{counts.medium}</span> Medium
           </div>
           <div className="u-stat-pill u-stat-pill--red">
-            <span>{counts.flagged}</span> Flagged
+            <span>{counts.high}</span> High Risk
           </div>
 
           <button type="button" className="u-view-btn" onClick={exportCSV}>
             Export CSV
           </button>
-
           <button type="button" className="u-view-btn" onClick={refreshDataset}>
-            Refresh Dataset
+            Refresh
           </button>
         </div>
       </section>
 
       {statusMessage && (
-        <p role="alert" className="u-status-message">
-          {statusMessage}
-        </p>
+        <p role="alert" className="u-status-message">{statusMessage}</p>
       )}
 
       <div className="u-controls">
         <div className="u-search-wrap">
-          <label htmlFor="user-search" className="u-visually-hidden">
-            Search users
-          </label>
-
-          <svg
-            aria-hidden="true"
-            width="15"
-            height="15"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <circle cx="11" cy="11" r="8" />
-            <path d="m21 21-4.35-4.35" />
+          <label htmlFor="user-search" className="u-visually-hidden">Search users</label>
+          <svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="8"/>
+            <path d="m21 21-4.35-4.35"/>
           </svg>
-
           <input
             id="user-search"
             type="text"
@@ -196,155 +78,87 @@ function Users() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
-
           {search && (
-            <button
-              type="button"
-              className="u-search-clear"
-              onClick={() => setSearch("")}
-              aria-label="Clear search"
-            >
+            <button type="button" className="u-search-clear"
+              onClick={() => setSearch("")} aria-label="Clear search">
               <span aria-hidden="true">✕</span>
             </button>
           )}
         </div>
 
         <div className="u-filter-tabs">
-          {["all", "active", "warning", "flagged"].map((f) => (
+          {["all", "low", "medium", "high"].map((f) => (
             <button
               type="button"
               key={f}
-              className={`u-filter-tab ${
-                filter === f ? "u-filter-tab--active" : ""
-              }`}
+              className={`u-filter-tab ${filter === f ? "u-filter-tab--active" : ""}`}
               onClick={() => setFilter(f)}
             >
               {f.charAt(0).toUpperCase() + f.slice(1)}
-              <span className="u-filter-count">{counts[f]}</span>
+              <span className="u-filter-count">{counts[f] ?? 0}</span>
             </button>
           ))}
         </div>
       </div>
 
       <div className="u-table-wrap">
-        <table className="u-table">
-          <thead>
-            <tr>
-              <th>User</th>
-              <th>Status</th>
-              <th>Income Type</th>
-              <th>Monthly Income</th>
-              <th>Total Spent</th>
-              <th>AI Score</th>
-              <th>Alerts</th>
-              <th>Joined</th>
-              <th></th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {filtered.length === 0 ? (
+        {loading ? (
+          <p style={{ padding: '2rem', color: '#94a3b8', textAlign: 'center' }}>Loading users...</p>
+        ) : (
+          <table className="u-table">
+            <thead>
               <tr>
-                <td colSpan="9" className="u-empty">
-                  No users found.
-                </td>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Income Type</th>
+                <th>Income Cycle</th>
+                <th>Cluster</th>
+                <th>Risk Level</th>
+                <th>Joined</th>
               </tr>
-            ) : (
-              filtered.map((u, i) => (
-                <tr
-                  key={u.id}
-                  style={{ animationDelay: `${i * 0.05}s` }}
-                  className="u-table-row"
-                >
-                  <td>
-                    <div className="u-user-cell">
-                      <div className="u-avatar">{u.avatar}</div>
-                      <div>
-                        <p className="u-name">ID: {u.id}</p>
-                        <p className="u-email">Anonymized User</p>
-                      </div>
-                    </div>
-                  </td>
-
-                  <td>
-                    <span
-                      className="u-status-badge"
-                      style={{
-                        color: statusConfig[u.status].color,
-                        background: statusConfig[u.status].bg
-                      }}
-                    >
-                      {statusConfig[u.status].label}
-                    </span>
-                  </td>
-
-                  <td>
-                    <span className="u-income-type">{u.incomeType}</span>
-                  </td>
-
-                  <td className="u-num">{u.income}</td>
-                  <td className="u-num">{u.spent}</td>
-
-                  <td>
-                    <div className="u-score-cell">
-                      <span
-                        className="u-score-num"
-                        style={{ color: scoreColor(u.spendingScore) }}
-                      >
-                        {u.spendingScore}
-                      </span>
-                      <div className="u-score-bar">
-                        <div
-                          style={{
-                            width: `${u.spendingScore}%`,
-                            background: scoreColor(u.spendingScore)
-                          }}
-                        />
-                      </div>
-                    </div>
-                  </td>
-
-                  <td>
-                    <span
-                      className={`u-alert-count ${
-                        u.alerts > 2
-                          ? "u-alert-count--high"
-                          : u.alerts > 0
-                          ? "u-alert-count--mid"
-                          : "u-alert-count--none"
-                      }`}
-                    >
-                      {u.alerts}
-                    </span>
-                  </td>
-
-                  <td className="u-date">{u.joined}</td>
-
-                  <td>
-                    <button
-                      type="button"
-                      className="u-view-btn"
-                      onClick={() => setSelected(u)}
-                    >
-                      View →
-                    </button>
-                  </td>
+            </thead>
+            <tbody>
+              {filtered.length === 0 ? (
+                <tr>
+                  <td colSpan="8" className="u-empty">No users found.</td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                filtered.map((u, i) => {
+                  const cfg = getRiskConfig(u.risk_level);
+                  return (
+                    <tr key={u.id} style={{ animationDelay: `${i * 0.05}s` }} className="u-table-row">
+                      <td className="u-num">{u.id}</td>
+                      <td>
+                        <div className="u-user-cell">
+                          <div className="u-avatar">👤</div>
+                          <p className="u-name">{u.name || 'Unknown'}</p>
+                        </div>
+                      </td>
+                      <td className="u-email">{u.email || '—'}</td>
+                      <td><span className="u-income-type">{u.income_type || '—'}</span></td>
+                      <td>{u.income_cycle || '—'}</td>
+                      <td>{u.cluster || '—'}</td>
+                      <td>
+                        <span className="u-status-badge" style={{ color: cfg.color, background: cfg.bg }}>
+                          {cfg.label}
+                        </span>
+                      </td>
+                      <td className="u-date">
+                        {u.date_joined ? new Date(u.date_joined).toLocaleDateString('en-PH') : '—'}
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        )}
       </div>
 
       <p className="u-table-footer">
-        Showing {filtered.length} of {filtered.length > 0 ? filtered.length : 0} users
+        Showing {filtered.length} of {counts.all} users
       </p>
-
-      <UserDetailModal
-        user={selected}
-        onClose={() => setSelected(null)}
-        onDeactivate={deactivateUser}
-      />
     </AdminLayout>
   );
 }

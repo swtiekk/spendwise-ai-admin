@@ -1,4 +1,3 @@
-import { mockMetrics } from "../../data/mockData";
 import useNavigateTo from "../../hooks/useNavigateTo";
 
 const icons = {
@@ -40,12 +39,68 @@ const metricLinks = {
   brain:    "/ml-insights",
 };
 
-function MetricsGrid() {
+function MetricsGrid({ dashData }) {
   const { goTo } = useNavigateTo();
+
+  // Build metrics from real backend data
+  const metrics = dashData ? [
+    {
+      id:     "users",
+      icon:   "users",
+      label:  "Total Users",
+      value:  dashData.total_users?.toLocaleString() ?? "—",
+      change: "Live",
+      trend:  "up",
+      fill:   "70%",
+      color:  "#2DD4BF",
+    },
+    {
+      id:     "spend",
+      icon:   "spend",
+      label:  "Total Expenses",
+      value:  "₱" + (dashData.total_expenses ?? 0).toLocaleString(),
+      change: "All time",
+      trend:  "up",
+      fill:   "55%",
+      color:  "#6366F1",
+    },
+    {
+      id:     "brain",
+      icon:   "brain",
+      label:  "Cluster Distribution",
+      value:  Object.keys(dashData.cluster_distribution ?? {}).length + " clusters",
+      change: "AI",
+      trend:  "up",
+      fill:   "80%",
+      color:  "#F59E0B",
+    },
+    {
+      id:     "activity",
+      icon:   "activity",
+      label:  "Avg Spend / User",
+      value:  dashData.total_users > 0
+        ? "₱" + Math.round(dashData.total_expenses / dashData.total_users).toLocaleString()
+        : "—",
+      change: "Calculated",
+      trend:  "up",
+      fill:   "45%",
+      color:  "#1A2B47",
+    },
+  ] : [];
+
+  if (!dashData) {
+    return (
+      <section className="db-metrics-grid" aria-label="Overview metrics">
+        {[1,2,3,4].map(i => (
+          <div key={i} className="db-metric-card" style={{ opacity: 0.4, minHeight: 120 }} />
+        ))}
+      </section>
+    );
+  }
 
   return (
     <section className="db-metrics-grid" aria-label="Overview metrics">
-      {mockMetrics.map((metric, i) => (
+      {metrics.map((metric, i) => (
         <article
           key={metric.id}
           className="db-metric-card"
@@ -56,11 +111,8 @@ function MetricsGrid() {
             <span className="db-metric-icon" style={{ color: metric.color }}>
               {icons[metric.icon]}
             </span>
-            <span
-              className={`db-metric-badge db-metric-badge--${metric.trend}`}
-              aria-label={`${metric.trend === "up" ? "Up" : "Down"} ${metric.change}`}
-            >
-              {metric.trend === "up" ? "▲" : "▼"} {metric.change}
+            <span className={`db-metric-badge db-metric-badge--${metric.trend}`}>
+              ▲ {metric.change}
             </span>
           </div>
           <p className="db-metric-value">{metric.value}</p>
