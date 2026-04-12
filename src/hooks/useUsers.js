@@ -1,27 +1,49 @@
-import { useState, useMemo } from "react";
-import { mockUsers } from "../data/mockData";
+import { useState, useMemo, useEffect } from "react";
+
+const BASE_URL = 'http://192.168.1.5:8000/api';
+const getToken = () => localStorage.getItem('adminToken');
 
 export function useUsers() {
-  const [users, setUsers] = useState(mockUsers);
-  const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState("all");
-  const [selected, setSelected] = useState(null);
+  const [users, setUsers]               = useState([]);
+  const [search, setSearch]             = useState("");
+  const [filter, setFilter]             = useState("all");
+  const [selected, setSelected]         = useState(null);
   const [statusMessage, setStatusMessage] = useState("");
+  const [loading, setLoading]           = useState(true);
 
-  const deactivateUser = (id) => {
-    const updated = users.map(u =>
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch(`${BASE_URL}/admin/users/`, {
+        headers: { Authorization: `Bearer ${getToken()}` },
+      });
+      const data = await res.json();
+      setUsers(data);
+    } catch (err) {
+      console.error('Failed to fetch users:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deactivateUser = async (id) => {
+    setUsers(prev => prev.map(u =>
       u.id === id ? { ...u, status: "flagged" } : u
-    );
-    setUsers(updated);
+    ));
     setSelected(null);
   };
 
   const exportCSV = () => {
-    const headers = ["UserID","Income","Spent","Savings","Score","Alerts"];
+    const headers = ["UserID", "Name", "Email", "Cluster", "Risk Level"];
     const rows = users.map(u => [
-      u.id, u.income, u.spent, u.savings, u.spendingScore, u.alerts
+      u.id, u.name, u.email, u.cluster, u.risk_level
     ]);
-    const csv = "data:text/csv;charset=utf-8," + [headers,...rows].map(e=>e.join(",")).join("\n");
+    const csv = "data:text/csv;charset=utf-8," +
+      [headers, ...rows].map(e => e.join(",")).join("\n");
     const link = document.createElement("a");
     link.href = encodeURI(csv);
     link.download = "users_report.csv";
@@ -29,28 +51,30 @@ export function useUsers() {
   };
 
   const refreshDataset = () => {
-    setStatusMessage("Dataset refreshed. ML retraining started.");
+    fetchUsers();
+    setStatusMessage("Dataset refreshed.");
   };
 
   const filtered = useMemo(() => {
     return users.filter(u => {
-      const matchSearch = 
-        u.name.toLowerCase().includes(search.toLowerCase()) ||
-        u.email.toLowerCase().includes(search.toLowerCase());
-      const matchFilter = filter === "all" || u.status === filter;
+      const matchSearch =
+        (u.name  ?? '').toLowerCase().includes(search.toLowerCase()) ||
+        (u.email ?? '').toLowerCase().includes(search.toLowerCase());
+      const matchFilter = filter === "all" || u.risk_level === filter;
       return matchSearch && matchFilter;
     });
   }, [users, search, filter]);
 
   const counts = useMemo(() => ({
-    all: users.length,
-    active: users.filter(u => u.status === "active").length,
-    warning: users.filter(u => u.status === "warning").length,
-    flagged: users.filter(u => u.status === "flagged").length,
+    all:     users.length,
+    safe:    users.filter(u => u.risk_level === "safe").length,
+    caution: users.filter(u => u.risk_level === "caution").length,
+    danger:  users.filter(u => u.risk_level === "danger").length,
   }), [users]);
 
   return {
     users,
+    loading,
     search, setSearch,
     filter, setFilter,
     selected, setSelected,
@@ -59,6 +83,6 @@ export function useUsers() {
     counts,
     deactivateUser,
     exportCSV,
-    refreshDataset
+    refreshDataset,
   };
 }
