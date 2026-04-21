@@ -6,35 +6,48 @@ import autoTable from "jspdf-autotable";
 import { BASE_URL, getToken } from "../config";
 
 function Reports() {
-  const [dateFrom,      setDateFrom]      = useState("");
-  const [dateTo,        setDateTo]        = useState("");
-  const [exported,      setExported]      = useState(false);
-  const [exportMsg,     setExportMsg]     = useState("");
-  const [allData,       setAllData]       = useState([]);
-  const [filteredData,  setFilteredData]  = useState([]);
-  const [hasGenerated,  setHasGenerated]  = useState(false);
-  const [loading,       setLoading]       = useState(true);
+  const [dateFrom,     setDateFrom]     = useState("");
+  const [dateTo,       setDateTo]       = useState("");
+  const [exported,     setExported]     = useState(false);
+  const [exportMsg,    setExportMsg]    = useState("");
+  const [allData,      setAllData]      = useState([]);
+  const [filteredData, setFilteredData] = useState([]);
+  const [hasGenerated, setHasGenerated] = useState(false);
+  const [loading,      setLoading]      = useState(true);
+  const [error,        setError]        = useState(null);
 
-  // Fetch real reports from backend on mount
+  // ── Fetch reports from backend ────────────────────────────────────────────
   useEffect(() => {
     const fetchReports = async () => {
       try {
         setLoading(true);
+        setError(null);
         const res = await fetch(`${BASE_URL}/admin/reports/`, {
-          headers: { Authorization: `Bearer ${getToken()}` },
+          headers: {
+            Authorization: `Bearer ${getToken()}`,
+            "Content-Type": "application/json",
+          },
         });
+
+        if (!res.ok) {
+          throw new Error(`Server error: ${res.status}`);
+        }
+
         const data = await res.json();
         setAllData(data);
         setFilteredData(data);
       } catch (err) {
-        console.error('Failed to fetch reports:', err);
+        console.error("Failed to fetch reports:", err);
+        setError(err.message || "Failed to load reports.");
       } finally {
         setLoading(false);
       }
     };
+
     fetchReports();
   }, []);
 
+  // ── Date filter ───────────────────────────────────────────────────────────
   const generateReport = () => {
     if (!dateFrom && !dateTo) {
       setFilteredData(allData);
@@ -42,46 +55,60 @@ function Reports() {
       return;
     }
     const result = allData.filter((row) => {
-      const d   = new Date(row.month);
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-      return (!dateFrom || key >= dateFrom) && (!dateTo || key <= dateTo);
+      return (
+        (!dateFrom || row.month >= dateFrom) &&
+        (!dateTo   || row.month <= dateTo)
+      );
     });
     setFilteredData(result.length > 0 ? result : allData);
     setHasGenerated(true);
   };
 
-  const totalSpendNum = filteredData.reduce((sum, r) => {
-    const num = parseFloat(String(r.totalSpend).replace(/[^0-9.]/g, ""));
-    return sum + (isNaN(num) ? 0 : num);
-  }, 0);
-  const totalUsers      = filteredData.reduce((sum, r) => sum + (r.users  || 0), 0);
-  const totalAlerts     = filteredData.reduce((sum, r) => sum + (r.alerts || 0), 0);
-  const totalSavingsNum = filteredData.reduce((sum, r) => {
-    const num = parseFloat(String(r.savings).replace(/[^0-9.]/g, ""));
-    return sum + (isNaN(num) ? 0 : num);
-  }, 0);
-
-  const handleExportCSV = () => {
-    const headers = ["Month","Active Users","Total Spend","Avg / User","AI Alerts","Total Savings","Top Category"];
-    const rows    = filteredData.map((r) => [r.month, r.users, r.totalSpend, r.avgSpend, r.alerts, r.savings, r.topCategory]);
-    const csv     = [headers, ...rows].map((row) => row.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
-    const blob    = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url     = URL.createObjectURL(blob);
-    const link    = document.createElement("a");
-    link.href = url;
-    link.download = `SpendWise_Report_${dateFrom || 'all'}_to_${dateTo || 'all'}.csv`;
-    document.body.appendChild(link); link.click(); document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    setExportMsg("✓ CSV downloaded!"); setExported(true); setTimeout(() => setExported(false), 2500);
+  // ── KPI Totals ────────────────────────────────────────────────────────────
+  const parseAmt = (val) => {
+    const num = parseFloat(String(val).replace(/[^0-9.]/g, ""));
+    return isNaN(num) ? 0 : num;
   };
 
+  const totalSpendNum   = filteredData.reduce((s, r) => s + parseAmt(r.totalSpend), 0);
+  const totalUsers      = filteredData.reduce((s, r) => s + (r.users  || 0), 0);
+  const totalAlerts     = filteredData.reduce((s, r) => s + (r.alerts || 0), 0);
+  const totalSavingsNum = filteredData.reduce((s, r) => s + parseAmt(r.savings),    0);
+
+  // ── Export CSV ────────────────────────────────────────────────────────────
+  const handleExportCSV = () => {
+    const headers = ["Month", "Active Users", "Total Spend", "Avg / User", "AI Alerts", "Total Savings", "Top Category"];
+    const rows    = filteredData.map((r) => [
+      r.month, r.users, r.totalSpend, r.avgSpend, r.alerts, r.savings, r.topCategory,
+    ]);
+    const csv  = [headers, ...rows]
+      .map((row) => row.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url  = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href     = url;
+    link.download = `SpendWise_Report_${dateFrom || "all"}_to_${dateTo || "all"}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    setExportMsg("✓ CSV downloaded!");
+    setExported(true);
+    setTimeout(() => setExported(false), 2500);
+  };
+
+  // ── Export PDF ────────────────────────────────────────────────────────────
   const handleExportPDF = () => {
     const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
-    doc.setFontSize(18); doc.setTextColor(26, 43, 71);
+    doc.setFontSize(18);
+    doc.setTextColor(26, 43, 71);
     doc.text("SpendWise AI - Monthly Report", 40, 40);
-    doc.setFontSize(10); doc.setTextColor(100, 116, 139);
+    doc.setFontSize(10);
+    doc.setTextColor(100, 116, 139);
     doc.text("Analytics & Export", 40, 58);
-    doc.text(`Period: ${dateFrom || 'All'} → ${dateTo || 'All'}`, 40, 72);
+    doc.text(`Period: ${dateFrom || "All"} → ${dateTo || "All"}`, 40, 72);
+
     const kpis = [
       { label: "TOTAL SPENDING", value: "₱" + totalSpendNum.toLocaleString() },
       { label: "TOTAL USERS",    value: totalUsers.toLocaleString() },
@@ -91,34 +118,55 @@ function Reports() {
     const boxW = 170, boxH = 48, startX = 40, startY = 88, gap = 12;
     kpis.forEach((k, i) => {
       const x = startX + i * (boxW + gap);
-      doc.setDrawColor(226, 232, 240); doc.setFillColor(248, 250, 252);
+      doc.setDrawColor(226, 232, 240);
+      doc.setFillColor(248, 250, 252);
       doc.roundedRect(x, startY, boxW, boxH, 4, 4, "FD");
-      doc.setFontSize(8); doc.setTextColor(148, 163, 184); doc.text(k.label, x + 12, startY + 16);
-      doc.setFontSize(16); doc.setTextColor(26, 43, 71); doc.text(k.value, x + 12, startY + 36);
+      doc.setFontSize(8);
+      doc.setTextColor(148, 163, 184);
+      doc.text(k.label, x + 12, startY + 16);
+      doc.setFontSize(16);
+      doc.setTextColor(26, 43, 71);
+      doc.text(k.value, x + 12, startY + 36);
     });
-    doc.setFontSize(12); doc.setTextColor(26, 43, 71); doc.text("Monthly Summary Breakdown", 40, 158);
+
+    doc.setFontSize(12);
+    doc.setTextColor(26, 43, 71);
+    doc.text("Monthly Summary Breakdown", 40, 158);
+
     autoTable(doc, {
       startY: 166,
       head: [["Month", "Active Users", "Total Spend", "Avg / User", "AI Alerts", "Total Savings", "Top Category"]],
-      body: filteredData.map((r) => [r.month, r.users, r.totalSpend, r.avgSpend, r.alerts, r.savings, r.topCategory]),
-      headStyles: { fillColor: [241, 245, 249], textColor: [71, 85, 105], fontSize: 9, fontStyle: "bold" },
-      bodyStyles: { fontSize: 10, textColor: [26, 43, 71] },
-      alternateRowStyles: { fillColor: [248, 250, 252] },
-      styles: { cellPadding: 8 }, margin: { left: 40, right: 40 },
+      body: filteredData.map((r) => [
+        r.month, r.users, r.totalSpend, r.avgSpend, r.alerts, r.savings, r.topCategory,
+      ]),
+      headStyles:          { fillColor: [241, 245, 249], textColor: [71, 85, 105], fontSize: 9, fontStyle: "bold" },
+      bodyStyles:          { fontSize: 10, textColor: [26, 43, 71] },
+      alternateRowStyles:  { fillColor: [248, 250, 252] },
+      styles:              { cellPadding: 8 },
+      margin:              { left: 40, right: 40 },
     });
+
     const pageH = doc.internal.pageSize.getHeight();
-    doc.setFontSize(9); doc.setTextColor(148, 163, 184);
-    doc.text(`Generated by SpendWise AI Admin Panel  •  ${new Date().toLocaleDateString("en-PH", { year: "numeric", month: "long", day: "numeric" })}`, 40, pageH - 20);
-    doc.save(`SpendWise_Report.pdf`);
-    setExportMsg("✓ PDF downloaded!"); setExported(true); setTimeout(() => setExported(false), 2500);
+    doc.setFontSize(9);
+    doc.setTextColor(148, 163, 184);
+    doc.text(
+      `Generated by SpendWise AI Admin Panel  •  ${new Date().toLocaleDateString("en-PH", {
+        year: "numeric", month: "long", day: "numeric",
+      })}`,
+      40, pageH - 20
+    );
+    doc.save("SpendWise_Report.pdf");
+    setExportMsg("✓ PDF downloaded!");
+    setExported(true);
+    setTimeout(() => setExported(false), 2500);
   };
 
-  // Build chart data from real data
-  const chartData  = filteredData.map(r => ({
+  // ── Chart data ────────────────────────────────────────────────────────────
+  const chartData = filteredData.map((r) => ({
     month:  r.month,
-    amount: parseFloat(String(r.totalSpend).replace(/[^0-9.]/g, "")) || 0,
+    amount: parseAmt(r.totalSpend),
   }));
-  const maxSpend = Math.max(...chartData.map(d => d.amount), 1);
+  const maxSpend = Math.max(...chartData.map((d) => d.amount), 1);
 
   const categories = [
     { label: "Food & Dining",     pct: 35, color: "#2DD4BF" },
@@ -128,6 +176,7 @@ function Reports() {
     { label: "Bills & Utilities", pct: 12, color: "#94a3b8" },
   ];
 
+  // ── Render ────────────────────────────────────────────────────────────────
   return (
     <AdminLayout>
       <main className="rp-main">
@@ -139,15 +188,38 @@ function Reports() {
             <h1 className="rp-header-title">Reports</h1>
           </div>
           <div className="rp-export-group">
-            {exported && <span className="rp-export-toast" role="status">{exportMsg}</span>}
-            <button type="button" className="rp-export-btn rp-export-btn--csv" onClick={handleExportCSV}>
+            {exported && (
+              <span className="rp-export-toast" role="status">{exportMsg}</span>
+            )}
+            <button
+              type="button"
+              className="rp-export-btn rp-export-btn--csv"
+              onClick={handleExportCSV}
+              disabled={filteredData.length === 0}
+            >
               <DownloadIcon /> Export CSV
             </button>
-            <button type="button" className="rp-export-btn rp-export-btn--pdf" onClick={handleExportPDF}>
+            <button
+              type="button"
+              className="rp-export-btn rp-export-btn--pdf"
+              onClick={handleExportPDF}
+              disabled={filteredData.length === 0}
+            >
               <FileIcon /> Export PDF
             </button>
           </div>
         </header>
+
+        {/* ── Error Banner ── */}
+        {error && (
+          <div style={{
+            background: "#fef2f2", border: "1px solid #fca5a5",
+            borderRadius: "8px", padding: "12px 16px",
+            color: "#dc2626", marginBottom: "1rem", fontSize: "14px",
+          }}>
+            ⚠️ {error} — Make sure your backend is running at <strong>{BASE_URL}</strong> and you are logged in as admin.
+          </div>
+        )}
 
         {/* ── Filter Bar ── */}
         <section aria-label="Date Range Filter">
@@ -155,14 +227,29 @@ function Reports() {
             <p className="rp-filter-label">Select Date Range</p>
             <div className="rp-filter-group">
               <label htmlFor="dateFrom">From</label>
-              <input id="dateFrom" type="month" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
+              <input
+                id="dateFrom"
+                type="month"
+                value={dateFrom}
+                onChange={(e) => setDateFrom(e.target.value)}
+              />
             </div>
             <span className="rp-filter-divider" aria-hidden="true">→</span>
             <div className="rp-filter-group">
               <label htmlFor="dateTo">To</label>
-              <input id="dateTo" type="month" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
+              <input
+                id="dateTo"
+                type="month"
+                value={dateTo}
+                onChange={(e) => setDateTo(e.target.value)}
+              />
             </div>
-            <button type="button" className="rp-filter-apply" onClick={generateReport}>
+            <button
+              type="button"
+              className="rp-filter-apply"
+              onClick={generateReport}
+              disabled={loading}
+            >
               Generate Report
             </button>
             {hasGenerated && (
@@ -182,7 +269,11 @@ function Reports() {
               { label: "Total Alerts",   value: totalAlerts.toLocaleString(),          icon: "🔔", color: "#F59E0B", bg: "#fffbeb" },
               { label: "Total Savings",  value: "₱" + totalSavingsNum.toLocaleString(),icon: "💰", color: "#2DD4BF", bg: "#ecfdf5" },
             ].map((k) => (
-              <div key={k.label} className="rp-kpi-card" style={{ background: k.bg, borderColor: k.color + "33" }}>
+              <div
+                key={k.label}
+                className="rp-kpi-card"
+                style={{ background: k.bg, borderColor: k.color + "33" }}
+              >
                 <div className="rp-kpi-icon" style={{ color: k.color }} aria-hidden="true">{k.icon}</div>
                 <p className="rp-kpi-value" style={{ color: k.color }}>{k.value}</p>
                 <p className="rp-kpi-label">{k.label}</p>
@@ -194,22 +285,37 @@ function Reports() {
         {/* ── Charts Row ── */}
         <section aria-label="Spending Charts">
           <div className="rp-content-grid">
+
+            {/* Bar Chart */}
             <div className="rp-chart-box">
               <div className="rp-chart-header">
                 <h2 className="rp-chart-title">Monthly Spending Trend</h2>
                 <p className="rp-chart-sub">Total platform spend per month</p>
               </div>
               {loading ? (
-                <p style={{ color: '#94a3b8', padding: '2rem' }}>Loading...</p>
+                <p style={{ color: "#94a3b8", padding: "2rem" }}>Loading...</p>
               ) : chartData.length === 0 ? (
-                <p style={{ color: '#94a3b8', padding: '2rem' }}>No data available.</p>
+                <p style={{ color: "#94a3b8", padding: "2rem" }}>No data available.</p>
               ) : (
-                <div className="rp-trend-chart" role="img" aria-label="Bar chart showing monthly spending trend">
+                <div
+                  className="rp-trend-chart"
+                  role="img"
+                  aria-label="Bar chart showing monthly spending trend"
+                >
                   {chartData.map((d, i) => (
-                    <div key={d.month} className="rp-trend-col" style={{ animationDelay: `${i * 0.08}s` }}>
-                      <span className="rp-trend-val">₱{(d.amount / 1000).toFixed(0)}k</span>
+                    <div
+                      key={d.month}
+                      className="rp-trend-col"
+                      style={{ animationDelay: `${i * 0.08}s` }}
+                    >
+                      <span className="rp-trend-val">
+                        ₱{(d.amount / 1000).toFixed(0)}k
+                      </span>
                       <div className="rp-trend-track">
-                        <div className="rp-trend-fill" style={{ height: `${(d.amount / maxSpend) * 100}%` }} />
+                        <div
+                          className="rp-trend-fill"
+                          style={{ height: `${(d.amount / maxSpend) * 100}%` }}
+                        />
                       </div>
                       <span className="rp-trend-label">{d.month}</span>
                     </div>
@@ -218,6 +324,7 @@ function Reports() {
               )}
             </div>
 
+            {/* Category Chart */}
             <div className="rp-chart-box">
               <div className="rp-chart-header">
                 <h2 className="rp-chart-title">Top Spending Categories</h2>
@@ -231,15 +338,24 @@ function Reports() {
                       <span className="rp-cat-name">{c.label}</span>
                       <span className="rp-cat-pct">{c.pct}%</span>
                     </div>
-                    <div className="rp-cat-bar" role="progressbar"
-                      aria-valuenow={c.pct} aria-valuemin={0} aria-valuemax={100}
-                      aria-label={`${c.label}: ${c.pct}%`}>
-                      <div className="rp-cat-bar-fill" style={{ width: `${c.pct}%`, background: c.color }} />
+                    <div
+                      className="rp-cat-bar"
+                      role="progressbar"
+                      aria-valuenow={c.pct}
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                      aria-label={`${c.label}: ${c.pct}%`}
+                    >
+                      <div
+                        className="rp-cat-bar-fill"
+                        style={{ width: `${c.pct}%`, background: c.color }}
+                      />
                     </div>
                   </li>
                 ))}
               </ul>
             </div>
+
           </div>
         </section>
 
@@ -250,7 +366,9 @@ function Reports() {
               <div>
                 <h2 className="rp-chart-title">Monthly Summary</h2>
                 <p className="rp-chart-sub">
-                  {loading ? "Loading..." : `${filteredData.length} record${filteredData.length !== 1 ? "s" : ""} shown`}
+                  {loading
+                    ? "Loading..."
+                    : `${filteredData.length} record${filteredData.length !== 1 ? "s" : ""} shown`}
                 </p>
               </div>
             </div>
@@ -258,16 +376,30 @@ function Reports() {
               <table className="rp-table" aria-label="Monthly spending summary">
                 <thead>
                   <tr>
-                    {["Month", "Active Users", "Total Spend", "Avg / User", "AI Alerts", "Total Savings", "Top Category"].map((h) => (
-                      <th key={h} scope="col">{h}</th>
-                    ))}
+                    {["Month", "Active Users", "Total Spend", "Avg / User", "AI Alerts", "Total Savings", "Top Category"].map(
+                      (h) => <th key={h} scope="col">{h}</th>
+                    )}
                   </tr>
                 </thead>
                 <tbody>
                   {loading ? (
-                    <tr><td colSpan="7" style={{ textAlign: 'center', padding: '2rem', color: '#94a3b8' }}>Loading data...</td></tr>
+                    <tr>
+                      <td colSpan="7" style={{ textAlign: "center", padding: "2rem", color: "#94a3b8" }}>
+                        Loading data...
+                      </td>
+                    </tr>
+                  ) : error ? (
+                    <tr>
+                      <td colSpan="7" style={{ textAlign: "center", padding: "2rem", color: "#dc2626" }}>
+                        Failed to load data. Check your connection and try again.
+                      </td>
+                    </tr>
                   ) : filteredData.length === 0 ? (
-                    <tr><td colSpan="7" style={{ textAlign: 'center', padding: '2rem', color: '#94a3b8' }}>No data available. Add some expenses first.</td></tr>
+                    <tr>
+                      <td colSpan="7" style={{ textAlign: "center", padding: "2rem", color: "#94a3b8" }}>
+                        No data available. Add some expenses first.
+                      </td>
+                    </tr>
                   ) : (
                     filteredData.map((row) => (
                       <tr key={row.month} className="rp-table-row">
@@ -276,7 +408,13 @@ function Reports() {
                         <td className="rp-savings">{row.totalSpend}</td>
                         <td>{row.avgSpend}</td>
                         <td>
-                          <span className={`rp-alert-badge ${row.alerts > 10 ? "rp-alert-badge--high" : row.alerts > 5 ? "rp-alert-badge--mid" : "rp-alert-badge--low"}`}>
+                          <span className={`rp-alert-badge ${
+                            row.alerts > 10
+                              ? "rp-alert-badge--high"
+                              : row.alerts > 5
+                              ? "rp-alert-badge--mid"
+                              : "rp-alert-badge--low"
+                          }`}>
                             {row.alerts}
                           </span>
                         </td>
@@ -296,6 +434,7 @@ function Reports() {
   );
 }
 
+// ── Icons ─────────────────────────────────────────────────────────────────────
 const DownloadIcon = () => (
   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
     strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
