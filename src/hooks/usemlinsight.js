@@ -1,4 +1,5 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from 'react';
+import { BASE_URL, getToken } from '../config';
 import {
   mockMLMetrics,
   mockBehaviorPatterns,
@@ -6,12 +7,12 @@ import {
   mockTopFlagged,
   mockCategoryData,
   mockUsers,
-} from "../data/mockData";
+} from '../data/mockData';
 
-// --- Constants ---
+// ── Constants ─────────────────────────────────────────────────────────────────
 
 export const CONFUSION_MATRIX = {
-  labels: ["Will Overspend", "Won't Overspend"],
+  labels: ['Will Overspend', "Won't Overspend"],
   matrix: [
     [142, 18],
     [11, 329],
@@ -19,38 +20,65 @@ export const CONFUSION_MATRIX = {
 };
 
 export const CLUSTER_DATA = [
-  { label: "Savers",       value: 312, color: "#2DD4BF", desc: "Consistently under budget, high savings rate" },
-  { label: "Balanced",     value: 487, color: "#6366F1", desc: "Moderate spending, occasional alerts" },
-  { label: "Impulsive",    value: 284, color: "#F59E0B", desc: "Frequent unplanned purchases detected" },
-  { label: "At-Risk",      value: 201, color: "#ef4444", desc: "Exceeding budget, multiple alerts flagged" },
+  { label: 'Savers',    value: 312, color: '#2DD4BF', desc: 'Consistently under budget, high savings rate' },
+  { label: 'Balanced',  value: 487, color: '#6366F1', desc: 'Moderate spending, occasional alerts' },
+  { label: 'Impulsive', value: 284, color: '#F59E0B', desc: 'Frequent unplanned purchases detected' },
+  { label: 'At-Risk',   value: 201, color: '#ef4444', desc: 'Exceeding budget, multiple alerts flagged' },
 ];
 
 export const RISK_CONFIG = {
-  high:   { color: "#ef4444", bg: "rgba(239,68,68,0.1)",   label: "High"   },
-  medium: { color: "#F59E0B", bg: "rgba(245,158,11,0.1)",   label: "Medium" },
-  low:    { color: "#2DD4BF", bg: "rgba(45,212,191,0.1)",   label: "Low"    },
+  high:   { color: '#ef4444', bg: 'rgba(239,68,68,0.1)',   label: 'High'   },
+  medium: { color: '#F59E0B', bg: 'rgba(245,158,11,0.1)',  label: 'Medium' },
+  low:    { color: '#2DD4BF', bg: 'rgba(45,212,191,0.1)',  label: 'Low'    },
 };
 
 export const ITEM_POOL = [
-  { name: "Starbucks Latte", category: "Dining", icon: "☕" },
-  { name: "Netflix Subscription", category: "Sub", icon: "🎬" },
-  { name: "Shell Gasoline", category: "Transport", icon: "⛽" },
-  { name: "Jollibee Meal", category: "Dining", icon: "🍗" },
-  { name: "Shopee Item", category: "Shopping", icon: "📦" },
-  { name: "Internet Bill", category: "Bills", icon: "🌐" },
-  { name: "Uniqlo Wear", category: "Shopping", icon: "👕" },
-  { name: "GrabFood", category: "Dining", icon: "🛵" },
-  { name: "7-Eleven Snack", category: "Dining", icon: "🏪" },
-  { name: "Lazada Delivery", category: "Shopping", icon: "🚚" },
-  { name: "Spotify Premium", category: "Sub", icon: "🎵" },
-  { name: "Cinema Ticket", category: "Entertainment", icon: "🎟️" }
+  { name: 'Starbucks Latte',      category: 'Dining',        icon: '☕' },
+  { name: 'Netflix Subscription', category: 'Sub',           icon: '🎬' },
+  { name: 'Shell Gasoline',       category: 'Transport',     icon: '⛽' },
+  { name: 'Jollibee Meal',        category: 'Dining',        icon: '🍗' },
+  { name: 'Shopee Item',          category: 'Shopping',      icon: '📦' },
+  { name: 'Internet Bill',        category: 'Bills',         icon: '🌐' },
+  { name: 'Uniqlo Wear',          category: 'Shopping',      icon: '👕' },
+  { name: 'GrabFood',             category: 'Dining',        icon: '🛵' },
+  { name: '7-Eleven Snack',       category: 'Dining',        icon: '🏪' },
+  { name: 'Lazada Delivery',      category: 'Shopping',      icon: '🚚' },
+  { name: 'Spotify Premium',      category: 'Sub',           icon: '🎵' },
+  { name: 'Cinema Ticket',        category: 'Entertainment', icon: '🎟️' },
 ];
 
-// --- Hook ---
+// ── Hook ──────────────────────────────────────────────────────────────────────
 
 export const useMLInsights = () => {
-  // Main Page State
-  const [activeTab, setActiveTab] = useState("overview");
+
+  // ── Real API data ──────────────────────────────────────────────────────────
+  const [realDashboard, setRealDashboard] = useState(null);
+  const [realLoading,   setRealLoading]   = useState(false);
+  const [realError,     setRealError]     = useState('');
+
+  useEffect(() => {
+    const fetchDashboard = async () => {
+      setRealLoading(true);
+      setRealError('');
+      try {
+        const res = await fetch(`${BASE_URL}/admin/dashboard`, {
+          headers: { Authorization: `Bearer ${getToken()}` },
+        });
+        if (!res.ok) throw new Error('Failed to load dashboard data.');
+        const data = await res.json();
+        setRealDashboard(data);
+      } catch (err) {
+        console.error('[useMLInsights] fetch error:', err);
+        setRealError(err.message);
+      } finally {
+        setRealLoading(false);
+      }
+    };
+    fetchDashboard();
+  }, []);
+
+  // ── Page state ─────────────────────────────────────────────────────────────
+  const [activeTab, setActiveTab] = useState('overview');
 
   const cmAccuracy = useMemo(() => {
     const total = CONFUSION_MATRIX.matrix.flat().reduce((a, b) => a + b, 0);
@@ -58,99 +86,95 @@ export const useMLInsights = () => {
   }, []);
 
   const tabs = useMemo(() => [
-    { key: "overview",  label: "Overview",             icon: "⊞" },
-    { key: "clusters",  label: "Cluster Distribution", icon: "◉" },
-    { key: "patterns",  label: "Behavior Patterns",    icon: "📊" },
-    { key: "matrix",    label: "Confusion Matrix",     icon: "🔢" },
-    { key: "planner",   label: "Budget Review",        icon: "🛍️" },
+    { key: 'overview', label: 'Overview',             icon: '⊞' },
+    { key: 'clusters', label: 'Cluster Distribution', icon: '◉' },
+    { key: 'patterns', label: 'Behavior Patterns',    icon: '📊' },
+    { key: 'matrix',   label: 'Confusion Matrix',     icon: '🔢' },
+    { key: 'planner',  label: 'Budget Review',        icon: '🛍️' },
   ], []);
 
-  // Overview Tab State
+  // ── Overview tab ───────────────────────────────────────────────────────────
   const [selectedBar, setSelectedBar] = useState(null);
-  const [hoveredBar, setHoveredBar] = useState(null);
+  const [hoveredBar,  setHoveredBar]  = useState(null);
 
-  const maxPredicted = useMemo(() => 
-    Math.max(...mockPredictionData.map((d) => Math.max(d.actual || 0, d.predicted))),
-    [mockPredictionData]
-  );
+  const maxPredicted = useMemo(() =>
+    Math.max(...mockPredictionData.map(d => Math.max(d.actual || 0, d.predicted))),
+  []);
 
-  // Clusters Tab State
+  // ── Clusters tab ───────────────────────────────────────────────────────────
   const [selectedCluster, setSelectedCluster] = useState(null);
 
   const { maxCluster, totalClusters } = useMemo(() => ({
-    maxCluster: Math.max(...CLUSTER_DATA.map((d) => d.value)),
-    totalClusters: CLUSTER_DATA.reduce((s, d) => s + d.value, 0)
+    maxCluster:    Math.max(...CLUSTER_DATA.map(d => d.value)),
+    totalClusters: CLUSTER_DATA.reduce((s, d) => s + d.value, 0),
   }), []);
 
   const handleClusterToggle = useCallback((cluster) => {
-    setSelectedCluster((prev) => (prev?.label === cluster.label ? null : cluster));
+    setSelectedCluster(prev => prev?.label === cluster.label ? null : cluster);
   }, []);
 
-  // Patterns Tab State
-  const [riskFilter, setRiskFilter] = useState("all");
+  // ── Patterns tab ───────────────────────────────────────────────────────────
+  const [riskFilter,      setRiskFilter]      = useState('all');
   const [selectedPattern, setSelectedPattern] = useState(null);
 
-  const filteredPatterns = useMemo(() => 
-    riskFilter === "all"
+  const filteredPatterns = useMemo(() =>
+    riskFilter === 'all'
       ? mockBehaviorPatterns
-      : mockBehaviorPatterns.filter((p) => p.risk === riskFilter),
-    [mockBehaviorPatterns, riskFilter]
-  );
+      : mockBehaviorPatterns.filter(p => p.risk === riskFilter),
+  [riskFilter]);
 
   const handlePatternToggle = useCallback((pattern) => {
-    setSelectedPattern((prev) => (prev?.pattern === pattern.pattern ? null : pattern));
+    setSelectedPattern(prev => prev?.pattern === pattern.pattern ? null : pattern);
   }, []);
 
-  // Matrix Tab State
+  // ── Matrix tab ─────────────────────────────────────────────────────────────
   const { cmTotal } = useMemo(() => {
     const total = CONFUSION_MATRIX.matrix.flat().reduce((a, b) => a + b, 0);
     return { cmTotal: total };
   }, []);
 
   const performanceMetrics = useMemo(() => [
-    { label: "Accuracy",  value: `${cmAccuracy}%`, color: "#2DD4BF", desc: "Overall correct predictions",       formula: "(TP+TN) / Total" },
-    { label: "Precision", value: "92.8%",           color: "#6366F1", desc: "Of predicted overspend, how many were right", formula: "TP / (TP+FP)" },
-    { label: "Recall",    value: "88.7%",           color: "#F59E0B", desc: "Of actual overspend, how many were caught",   formula: "TP / (TP+FN)" },
-    { label: "F1 Score",  value: "90.7%",           color: "#1A2B47", desc: "Balance between precision and recall",  formula: "2×(P×R)/(P+R)" },
+    { label: 'Accuracy',  value: `${cmAccuracy}%`, color: '#2DD4BF', desc: 'Overall correct predictions',                    formula: '(TP+TN) / Total' },
+    { label: 'Precision', value: '92.8%',           color: '#6366F1', desc: 'Of predicted overspend, how many were right',    formula: 'TP / (TP+FP)'    },
+    { label: 'Recall',    value: '88.7%',           color: '#F59E0B', desc: 'Of actual overspend, how many were caught',      formula: 'TP / (TP+FN)'    },
+    { label: 'F1 Score',  value: '90.7%',           color: '#1A2B47', desc: 'Balance between precision and recall',           formula: '2×(P×R)/(P+R)'   },
   ], [cmAccuracy]);
 
-  // Budget Tab State
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [expandedDays, setExpandedDays] = useState({});
+  // ── Budget tab ─────────────────────────────────────────────────────────────
+  const [selectedUser,  setSelectedUser]  = useState(null);
+  const [expandedDays,  setExpandedDays]  = useState({});
 
   const toggleDayExpansion = useCallback((day) => {
-    setExpandedDays((prev) => ({ ...prev, [day]: !prev[day] }));
+    setExpandedDays(prev => ({ ...prev, [day]: !prev[day] }));
   }, []);
 
   const parseCurrency = useCallback((str) => {
     if (!str) return 0;
     if (typeof str === 'number') return str;
-    return Number(str.replace(/[^0-9.-]+/g, ""));
+    return Number(str.replace(/[^0-9.-]+/g, ''));
   }, []);
 
-  const formatCurrency = useCallback((val) => new Intl.NumberFormat('en-PH', {
-    style: 'currency',
-    currency: 'PHP',
-  }).format(val), []);
+  const formatCurrency = useCallback((val) =>
+    new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(val),
+  []);
 
   const dailyLog = useMemo(() => {
     if (!selectedUser) return [];
-    
-    const monthlyBudget = parseCurrency(selectedUser.income);
-    const totalActualSpent = parseCurrency(selectedUser.spent);
+
+    const monthlyBudget       = parseCurrency(selectedUser.income);
+    const totalActualSpent    = parseCurrency(selectedUser.spent);
     const transactionDaysCount = Math.min(selectedUser.transactions || 20, 30);
-    
-    const dayIndices = Array.from({ length: 30 }, (_, i) => i);
+
+    const dayIndices            = Array.from({ length: 30 }, (_, i) => i);
     const dailyActualSpentAmounts = new Array(30).fill(0);
-    
-    // Shuffle indices to distribute totalActualSpent
+
     for (let i = dayIndices.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [dayIndices[i], dayIndices[j]] = [dayIndices[j], dayIndices[i]];
     }
-    
+
     let remainingToDistribute = totalActualSpent;
-    const activeDayIndices = dayIndices.slice(0, transactionDaysCount);
+    const activeDayIndices    = dayIndices.slice(0, transactionDaysCount);
     activeDayIndices.sort((a, b) => a - b);
     const avgDailySpend = totalActualSpent / transactionDaysCount;
 
@@ -158,7 +182,7 @@ export const useMLInsights = () => {
       if (i === activeDayIndices.length - 1) {
         dailyActualSpentAmounts[idx] = remainingToDistribute;
       } else {
-        const amount = Math.round(avgDailySpend * (0.6 + Math.random() * 0.8));
+        const amount      = Math.round(avgDailySpend * (0.6 + Math.random() * 0.8));
         const finalAmount = Math.min(amount, remainingToDistribute);
         dailyActualSpentAmounts[idx] = finalAmount;
         remainingToDistribute -= finalAmount;
@@ -168,66 +192,47 @@ export const useMLInsights = () => {
     let runningSpent = 0;
 
     return Array.from({ length: 30 }, (_, i) => {
-      const day = i + 1;
+      const day         = i + 1;
       const targetSpend = dailyActualSpentAmounts[i];
       const transactions = [];
-      let dayActualTotal = 0;
+      let   dayActualTotal = 0;
 
-      // 1. Generate Actual Spends
       if (targetSpend > 0) {
         const itemCount = Math.floor(Math.random() * 2) + 1;
-        let remainingInDay = targetSpend;
+        let   remainingInDay = targetSpend;
 
         for (let j = 0; j < itemCount; j++) {
-          const itemTemplate = ITEM_POOL[Math.floor(Math.random() * ITEM_POOL.length)];
-          const price = (j === itemCount - 1) ? remainingInDay : Math.round((targetSpend / itemCount) * (0.8 + Math.random() * 0.4));
-          remainingInDay -= price;
+          const itemTemplate   = ITEM_POOL[Math.floor(Math.random() * ITEM_POOL.length)];
+          const price          = (j === itemCount - 1) ? remainingInDay : Math.round((targetSpend / itemCount) * (0.8 + Math.random() * 0.4));
+          remainingInDay      -= price;
 
           const isInsufficient = (runningSpent + price) > monthlyBudget;
-          let verdict = "YES";
+          let verdict  = 'YES';
           let followed = true;
 
           if (isInsufficient) {
-            verdict = "NO";
-            followed = false; 
+            verdict  = 'NO';
+            followed = false;
           } else {
             const isNo = Math.random() > (selectedUser.spendingScore / 100) + 0.2;
-            verdict = isNo ? "NO" : "YES";
+            verdict  = isNo ? 'NO' : 'YES';
             followed = !isNo;
           }
 
-          transactions.push({
-            id: `day${day}-spend-${j}`,
-            ...itemTemplate,
-            price,
-            verdict,
-            followed,
-            isSaving: false
-          });
-          
-          runningSpent += price;
+          transactions.push({ id: `day${day}-spend-${j}`, ...itemTemplate, price, verdict, followed, isSaving: false });
+          runningSpent  += price;
           dayActualTotal += price;
         }
       }
 
-      // 2. Generate "Potential Savings"
-      const savingsCount = Math.floor(Math.random() * 2); 
+      const savingsCount = Math.floor(Math.random() * 2);
       for (let s = 0; s < savingsCount; s++) {
-        const itemTemplate = ITEM_POOL[Math.floor(Math.random() * ITEM_POOL.length)];
-        const price = Math.round(avgDailySpend * (0.3 + Math.random() * 0.7));
-
+        const itemTemplate   = ITEM_POOL[Math.floor(Math.random() * ITEM_POOL.length)];
+        const price          = Math.round(avgDailySpend * (0.3 + Math.random() * 0.7));
         const isInsufficient = (runningSpent + price) > monthlyBudget;
-        const verdict = isInsufficient ? "NO" : (Math.random() > 0.5 ? "NO" : "YES");
-        
-        if (verdict === "NO") {
-          transactions.push({
-            id: `day${day}-save-${s}`,
-            ...itemTemplate,
-            price,
-            verdict: "NO",
-            followed: true,
-            isSaving: true
-          });
+        const verdict        = isInsufficient ? 'NO' : (Math.random() > 0.5 ? 'NO' : 'YES');
+        if (verdict === 'NO') {
+          transactions.push({ id: `day${day}-save-${s}`, ...itemTemplate, price, verdict: 'NO', followed: true, isSaving: true });
         }
       }
 
@@ -235,16 +240,22 @@ export const useMLInsights = () => {
 
       return {
         day,
-        hasActivity: transactions.length > 0,
+        hasActivity:     transactions.length > 0,
         transactions,
-        dayTotal: dayActualTotal,
-        remainingBudget: monthlyBudget - runningSpent
+        dayTotal:        dayActualTotal,
+        remainingBudget: monthlyBudget - runningSpent,
       };
     });
   }, [selectedUser, parseCurrency]);
 
+  // ── Return ─────────────────────────────────────────────────────────────────
   return {
-    // Shared
+    // Real API data
+    realDashboard,
+    realLoading,
+    realError,
+
+    // Mock data (still used for charts/ML tabs until backend ML endpoints exist)
     mockMLMetrics,
     mockBehaviorPatterns,
     mockPredictionData,
@@ -253,30 +264,23 @@ export const useMLInsights = () => {
     mockUsers,
 
     // Page
-    activeTab,
-    setActiveTab,
+    activeTab, setActiveTab,
     cmAccuracy,
     tabs,
 
     // Overview
-    selectedBar,
-    setSelectedBar,
-    hoveredBar,
-    setHoveredBar,
+    selectedBar, setSelectedBar,
+    hoveredBar,  setHoveredBar,
     maxPredicted,
 
     // Clusters
-    selectedCluster,
-    setSelectedCluster,
-    maxCluster,
-    totalClusters,
+    selectedCluster, setSelectedCluster,
+    maxCluster, totalClusters,
     handleClusterToggle,
 
     // Patterns
-    riskFilter,
-    setRiskFilter,
-    selectedPattern,
-    setSelectedPattern,
+    riskFilter,      setRiskFilter,
+    selectedPattern, setSelectedPattern,
     filteredPatterns,
     handlePatternToggle,
 
@@ -285,8 +289,7 @@ export const useMLInsights = () => {
     performanceMetrics,
 
     // Budget
-    selectedUser,
-    setSelectedUser,
+    selectedUser, setSelectedUser,
     expandedDays,
     toggleDayExpansion,
     parseCurrency,
