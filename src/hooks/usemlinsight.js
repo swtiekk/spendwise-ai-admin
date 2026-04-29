@@ -1,15 +1,7 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { BASE_URL, getToken } from '../config';
-import {
-  mockMLMetrics,
-  mockBehaviorPatterns,
-  mockPredictionData,
-  mockTopFlagged,
-  mockCategoryData,
-  mockUsers,
-} from '../data/mockData';
 
-// ── Constants ─────────────────────────────────────────────────────────────────
+// ── Constants (static ML evaluation data) ─────────────────────────────────────
 
 export const CONFUSION_MATRIX = {
   labels: ['Will Overspend', "Won't Overspend"],
@@ -18,13 +10,6 @@ export const CONFUSION_MATRIX = {
     [11, 329],
   ],
 };
-
-export const CLUSTER_DATA = [
-  { label: 'Savers',    value: 312, color: '#2DD4BF', desc: 'Consistently under budget, high savings rate' },
-  { label: 'Balanced',  value: 487, color: '#6366F1', desc: 'Moderate spending, occasional alerts' },
-  { label: 'Impulsive', value: 284, color: '#F59E0B', desc: 'Frequent unplanned purchases detected' },
-  { label: 'At-Risk',   value: 201, color: '#ef4444', desc: 'Exceeding budget, multiple alerts flagged' },
-];
 
 export const RISK_CONFIG = {
   high:   { color: '#ef4444', bg: 'rgba(239,68,68,0.1)',   label: 'High'   },
@@ -51,31 +36,91 @@ export const ITEM_POOL = [
 
 export const useMLInsights = () => {
 
-  // ── Real API data ──────────────────────────────────────────────────────────
-  const [realDashboard, setRealDashboard] = useState(null);
-  const [realLoading,   setRealLoading]   = useState(false);
-  const [realError,     setRealError]     = useState('');
+  // ── API state ──────────────────────────────────────────────────────────────
+  const [mlData,      setMlData]      = useState(null);
+  const [usersData,   setUsersData]   = useState([]);
+  const [dashData,    setDashData]    = useState(null);
+  const [clusterData, setClusterData] = useState([]);
+  const [loading,     setLoading]     = useState(false);
+  const [error,       setError]       = useState('');
 
   useEffect(() => {
-    const fetchDashboard = async () => {
-      setRealLoading(true);
-      setRealError('');
+    const fetchAll = async () => {
+      setLoading(true);
+      setError('');
       try {
-        const res = await fetch(`${BASE_URL}/admin/dashboard`, {
-          headers: { Authorization: `Bearer ${getToken()}` },
-        });
-        if (!res.ok) throw new Error('Failed to load dashboard data.');
-        const data = await res.json();
-        setRealDashboard(data);
+        const headers = { Authorization: `Bearer ${getToken()}` };
+
+        const [mlRes, usersRes, dashRes, clustersRes] = await Promise.all([
+          fetch(`${BASE_URL}/admin/ml-insights`,  { headers }),
+          fetch(`${BASE_URL}/admin/users-detail`, { headers }),
+          fetch(`${BASE_URL}/admin/dashboard`,    { headers }),
+          fetch(`${BASE_URL}/admin/clusters`,     { headers }),
+        ]);
+
+        if (!mlRes.ok)       throw new Error('Failed to load ML insights');
+        if (!usersRes.ok)    throw new Error('Failed to load users');
+        if (!dashRes.ok)     throw new Error('Failed to load dashboard');
+        if (!clustersRes.ok) throw new Error('Failed to load clusters');
+
+        const [ml, users, dash, clusters] = await Promise.all([
+          mlRes.json(),
+          usersRes.json(),
+          dashRes.json(),
+          clustersRes.json(),
+        ]);
+
+        setMlData(ml);
+        setUsersData(users);
+        setDashData(dash);
+        setClusterData(clusters);
       } catch (err) {
         console.error('[useMLInsights] fetch error:', err);
-        setRealError(err.message);
+        setError(err.message);
       } finally {
-        setRealLoading(false);
+        setLoading(false);
       }
     };
-    fetchDashboard();
+    fetchAll();
   }, []);
+
+  // ── Derived data from API ──────────────────────────────────────────────────
+  const mockMLMetrics = useMemo(() => {
+    if (!mlData) return null;
+    return {
+      totalUsers:    mlData.total_users,
+      totalExpenses: mlData.total_expenses,
+      avgIncome:     mlData.avg_income,
+      flaggedUsers:  mlData.flagged_users,
+    };
+  }, [mlData]);
+
+  const mockPredictionData = useMemo(() =>
+    mlData?.prediction_data ?? [], [mlData]);
+
+  const mockTopFlagged = useMemo(() =>
+    mlData?.top_flagged ?? [], [mlData]);
+
+  const mockCategoryData = useMemo(() =>
+    mlData?.category_data ?? [], [mlData]);
+
+  const mockUsers = useMemo(() =>
+    usersData, [usersData]);
+
+  const mockBehaviorPatterns = useMemo(() => {
+    if (!mlData) return [];
+    return (mlData.category_data ?? []).slice(0, 6).map((cat) => ({
+      pattern:   cat.label,
+      users:     cat.count,
+      avgAmount: cat.count > 0 ? Math.round(cat.total / cat.count) : 0,
+      trend:     cat.total > mlData.avg_income ? 'up' : 'stable',
+      risk:      cat.total > mlData.avg_income * mlData.total_users
+                   ? 'high'
+                   : cat.total > (mlData.avg_income * mlData.total_users * 0.5)
+                   ? 'medium'
+                   : 'low',
+    }));
+  }, [mlData]);
 
   // ── Page state ─────────────────────────────────────────────────────────────
   const [activeTab, setActiveTab] = useState('overview');
@@ -98,16 +143,18 @@ export const useMLInsights = () => {
   const [hoveredBar,  setHoveredBar]  = useState(null);
 
   const maxPredicted = useMemo(() =>
-    Math.max(...mockPredictionData.map(d => Math.max(d.actual || 0, d.predicted))),
-  []);
+    mockPredictionData.length > 0
+      ? Math.max(...mockPredictionData.map(d => Math.max(d.actual || 0, d.predicted)))
+      : 0,
+  [mockPredictionData]);
 
   // ── Clusters tab ───────────────────────────────────────────────────────────
   const [selectedCluster, setSelectedCluster] = useState(null);
 
   const { maxCluster, totalClusters } = useMemo(() => ({
-    maxCluster:    Math.max(...CLUSTER_DATA.map(d => d.value)),
-    totalClusters: CLUSTER_DATA.reduce((s, d) => s + d.value, 0),
-  }), []);
+    maxCluster:    clusterData.length > 0 ? Math.max(...clusterData.map(d => d.value)) : 1,
+    totalClusters: clusterData.reduce((s, d) => s + d.value, 0),
+  }), [clusterData]);
 
   const handleClusterToggle = useCallback((cluster) => {
     setSelectedCluster(prev => prev?.label === cluster.label ? null : cluster);
@@ -121,7 +168,7 @@ export const useMLInsights = () => {
     riskFilter === 'all'
       ? mockBehaviorPatterns
       : mockBehaviorPatterns.filter(p => p.risk === riskFilter),
-  [riskFilter]);
+  [riskFilter, mockBehaviorPatterns]);
 
   const handlePatternToggle = useCallback((pattern) => {
     setSelectedPattern(prev => prev?.pattern === pattern.pattern ? null : pattern);
@@ -134,10 +181,10 @@ export const useMLInsights = () => {
   }, []);
 
   const performanceMetrics = useMemo(() => [
-    { label: 'Accuracy',  value: `${cmAccuracy}%`, color: '#2DD4BF', desc: 'Overall correct predictions',                    formula: '(TP+TN) / Total' },
-    { label: 'Precision', value: '92.8%',           color: '#6366F1', desc: 'Of predicted overspend, how many were right',    formula: 'TP / (TP+FP)'    },
-    { label: 'Recall',    value: '88.7%',           color: '#F59E0B', desc: 'Of actual overspend, how many were caught',      formula: 'TP / (TP+FN)'    },
-    { label: 'F1 Score',  value: '90.7%',           color: '#1A2B47', desc: 'Balance between precision and recall',           formula: '2×(P×R)/(P+R)'   },
+    { label: 'Accuracy',  value: `${cmAccuracy}%`, color: '#2DD4BF', desc: 'Overall correct predictions',                 formula: '(TP+TN) / Total' },
+    { label: 'Precision', value: '92.8%',           color: '#6366F1', desc: 'Of predicted overspend, how many were right', formula: 'TP / (TP+FP)'    },
+    { label: 'Recall',    value: '88.7%',           color: '#F59E0B', desc: 'Of actual overspend, how many were caught',   formula: 'TP / (TP+FN)'    },
+    { label: 'F1 Score',  value: '90.7%',           color: '#1A2B47', desc: 'Balance between precision and recall',        formula: '2×(P×R)/(P+R)'   },
   ], [cmAccuracy]);
 
   // ── Budget tab ─────────────────────────────────────────────────────────────
@@ -161,11 +208,11 @@ export const useMLInsights = () => {
   const dailyLog = useMemo(() => {
     if (!selectedUser) return [];
 
-    const monthlyBudget       = parseCurrency(selectedUser.income);
-    const totalActualSpent    = parseCurrency(selectedUser.spent);
+    const monthlyBudget        = parseCurrency(selectedUser.income);
+    const totalActualSpent     = parseCurrency(selectedUser.spent);
     const transactionDaysCount = Math.min(selectedUser.transactions || 20, 30);
 
-    const dayIndices            = Array.from({ length: 30 }, (_, i) => i);
+    const dayIndices              = Array.from({ length: 30 }, (_, i) => i);
     const dailyActualSpentAmounts = new Array(30).fill(0);
 
     for (let i = dayIndices.length - 1; i > 0; i--) {
@@ -220,7 +267,7 @@ export const useMLInsights = () => {
           }
 
           transactions.push({ id: `day${day}-spend-${j}`, ...itemTemplate, price, verdict, followed, isSaving: false });
-          runningSpent  += price;
+          runningSpent   += price;
           dayActualTotal += price;
         }
       }
@@ -250,45 +297,31 @@ export const useMLInsights = () => {
 
   // ── Return ─────────────────────────────────────────────────────────────────
   return {
-    // Real API data
-    realDashboard,
-    realLoading,
-    realError,
-
-    // Mock data (still used for charts/ML tabs until backend ML endpoints exist)
+    loading,
+    error,
+    dashData,
     mockMLMetrics,
     mockBehaviorPatterns,
     mockPredictionData,
     mockTopFlagged,
     mockCategoryData,
     mockUsers,
-
-    // Page
+    clusterData,
     activeTab, setActiveTab,
     cmAccuracy,
     tabs,
-
-    // Overview
     selectedBar, setSelectedBar,
     hoveredBar,  setHoveredBar,
     maxPredicted,
-
-    // Clusters
     selectedCluster, setSelectedCluster,
     maxCluster, totalClusters,
     handleClusterToggle,
-
-    // Patterns
     riskFilter,      setRiskFilter,
     selectedPattern, setSelectedPattern,
     filteredPatterns,
     handlePatternToggle,
-
-    // Matrix
     cmTotal,
     performanceMetrics,
-
-    // Budget
     selectedUser, setSelectedUser,
     expandedDays,
     toggleDayExpansion,

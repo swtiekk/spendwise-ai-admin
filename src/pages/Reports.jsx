@@ -15,6 +15,7 @@ function Reports() {
   const [hasGenerated, setHasGenerated] = useState(false);
   const [loading,      setLoading]      = useState(true);
   const [error,        setError]        = useState(null);
+  const [categories,   setCategories]   = useState([]);
 
   // ── Fetch reports from backend ────────────────────────────────────────────
   useEffect(() => {
@@ -22,20 +23,37 @@ function Reports() {
       try {
         setLoading(true);
         setError(null);
-        const res = await fetch(`${BASE_URL}/admin/reports/`, {
-          headers: {
-            Authorization: `Bearer ${getToken()}`,
-            "Content-Type": "application/json",
-          },
-        });
 
-        if (!res.ok) {
-          throw new Error(`Server error: ${res.status}`);
-        }
+        const headers = {
+          Authorization:  `Bearer ${getToken()}`,
+          "Content-Type": "application/json",
+        };
 
-        const data = await res.json();
+        const [reportsRes, mlRes] = await Promise.all([
+          fetch(`${BASE_URL}/admin/reports`,      { headers }),
+          fetch(`${BASE_URL}/admin/ml-insights`,  { headers }),
+        ]);
+
+        if (!reportsRes.ok) throw new Error(`Server error: ${reportsRes.status}`);
+
+        const data = await reportsRes.json();
         setAllData(data);
         setFilteredData(data);
+
+        // Build real category breakdown from ml-insights
+        if (mlRes.ok) {
+          const ml = await mlRes.json();
+          const catData = ml.category_data ?? [];
+          const total   = catData.reduce((s, c) => s + c.total, 0);
+          const colors  = ["#2DD4BF", "#6366F1", "#F59E0B", "#1A2B47", "#94a3b8", "#EC4899", "#10B981", "#3B82F6"];
+          setCategories(
+            catData.slice(0, 5).map((c, i) => ({
+              label: c.label,
+              pct:   total > 0 ? Math.round((c.total / total) * 100) : 0,
+              color: colors[i % colors.length],
+            }))
+          );
+        }
       } catch (err) {
         console.error("Failed to fetch reports:", err);
         setError(err.message || "Failed to load reports.");
@@ -54,12 +72,10 @@ function Reports() {
       setHasGenerated(true);
       return;
     }
-    const result = allData.filter((row) => {
-      return (
-        (!dateFrom || row.month >= dateFrom) &&
-        (!dateTo   || row.month <= dateTo)
-      );
-    });
+    const result = allData.filter((row) => (
+      (!dateFrom || row.month >= dateFrom) &&
+      (!dateTo   || row.month <= dateTo)
+    ));
     setFilteredData(result.length > 0 ? result : allData);
     setHasGenerated(true);
   };
@@ -139,11 +155,11 @@ function Reports() {
       body: filteredData.map((r) => [
         r.month, r.users, r.totalSpend, r.avgSpend, r.alerts, r.savings, r.topCategory,
       ]),
-      headStyles:          { fillColor: [241, 245, 249], textColor: [71, 85, 105], fontSize: 9, fontStyle: "bold" },
-      bodyStyles:          { fontSize: 10, textColor: [26, 43, 71] },
-      alternateRowStyles:  { fillColor: [248, 250, 252] },
-      styles:              { cellPadding: 8 },
-      margin:              { left: 40, right: 40 },
+      headStyles:         { fillColor: [241, 245, 249], textColor: [71, 85, 105], fontSize: 9, fontStyle: "bold" },
+      bodyStyles:         { fontSize: 10, textColor: [26, 43, 71] },
+      alternateRowStyles: { fillColor: [248, 250, 252] },
+      styles:             { cellPadding: 8 },
+      margin:             { left: 40, right: 40 },
     });
 
     const pageH = doc.internal.pageSize.getHeight();
@@ -167,14 +183,6 @@ function Reports() {
     amount: parseAmt(r.totalSpend),
   }));
   const maxSpend = Math.max(...chartData.map((d) => d.amount), 1);
-
-  const categories = [
-    { label: "Food & Dining",     pct: 35, color: "#2DD4BF" },
-    { label: "Transportation",    pct: 20, color: "#6366F1" },
-    { label: "Entertainment",     pct: 18, color: "#F59E0B" },
-    { label: "Shopping",          pct: 15, color: "#1A2B47" },
-    { label: "Bills & Utilities", pct: 12, color: "#94a3b8" },
-  ];
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
@@ -330,30 +338,36 @@ function Reports() {
                 <h2 className="rp-chart-title">Top Spending Categories</h2>
                 <p className="rp-chart-sub">Platform-wide distribution</p>
               </div>
-              <ul className="rp-cat-list">
-                {categories.map((c) => (
-                  <li key={c.label} className="rp-cat-item">
-                    <div className="rp-cat-label-row">
-                      <span className="rp-cat-dot" style={{ background: c.color }} aria-hidden="true" />
-                      <span className="rp-cat-name">{c.label}</span>
-                      <span className="rp-cat-pct">{c.pct}%</span>
-                    </div>
-                    <div
-                      className="rp-cat-bar"
-                      role="progressbar"
-                      aria-valuenow={c.pct}
-                      aria-valuemin={0}
-                      aria-valuemax={100}
-                      aria-label={`${c.label}: ${c.pct}%`}
-                    >
+              {loading ? (
+                <p style={{ color: "#94a3b8", padding: "2rem" }}>Loading...</p>
+              ) : categories.length === 0 ? (
+                <p style={{ color: "#94a3b8", padding: "2rem" }}>No category data available.</p>
+              ) : (
+                <ul className="rp-cat-list">
+                  {categories.map((c) => (
+                    <li key={c.label} className="rp-cat-item">
+                      <div className="rp-cat-label-row">
+                        <span className="rp-cat-dot" style={{ background: c.color }} aria-hidden="true" />
+                        <span className="rp-cat-name">{c.label}</span>
+                        <span className="rp-cat-pct">{c.pct}%</span>
+                      </div>
                       <div
-                        className="rp-cat-bar-fill"
-                        style={{ width: `${c.pct}%`, background: c.color }}
-                      />
-                    </div>
-                  </li>
-                ))}
-              </ul>
+                        className="rp-cat-bar"
+                        role="progressbar"
+                        aria-valuenow={c.pct}
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                        aria-label={`${c.label}: ${c.pct}%`}
+                      >
+                        <div
+                          className="rp-cat-bar-fill"
+                          style={{ width: `${c.pct}%`, background: c.color }}
+                        />
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
 
           </div>

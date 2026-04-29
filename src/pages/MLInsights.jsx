@@ -18,7 +18,41 @@ function MLInsights() {
     mockTopFlagged,
     mockCategoryData,
     mockBehaviorPatterns,
+    loading,
+    error,
   } = useMLInsights();
+
+  // Transform API object into card array for OverviewTab
+  const mlMetricCards = mockMLMetrics ? [
+    {
+      label: "Total Users",
+      value: mockMLMetrics.totalUsers?.toLocaleString() ?? "0",
+      trend: "active",
+      sub: "Registered users",
+      color: "#2DD4BF",
+    },
+    {
+      label: "Total Expenses",
+      value: `₱${(mockMLMetrics.totalExpenses ?? 0).toLocaleString()}`,
+      trend: "tracked",
+      sub: "All-time spending",
+      color: "#6366F1",
+    },
+    {
+      label: "Avg Income",
+      value: `₱${(mockMLMetrics.avgIncome ?? 0).toLocaleString()}`,
+      trend: "monthly",
+      sub: "Per user average",
+      color: "#F59E0B",
+    },
+    {
+      label: "Flagged Users",
+      value: mockMLMetrics.flaggedUsers?.toLocaleString() ?? "0",
+      trend: "at-risk",
+      sub: "Spent over 50% income",
+      color: "#ef4444",
+    },
+  ] : [];
 
   return (
     <AdminLayout>
@@ -54,37 +88,51 @@ function MLInsights() {
         ))}
       </nav>
 
-      <section className="ml-content-area" aria-live="polite">
-        {activeTab === "overview" && (
-          <OverviewTab 
-            mockMLMetrics={mockMLMetrics} 
-            mockPredictionData={mockPredictionData} 
-            mockTopFlagged={mockTopFlagged} 
-          />
-        )}
+      {loading && (
+        <div className="ml-content-area" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '200px' }}>
+          <p style={{ color: '#64748b', fontSize: '0.9rem' }}>Loading ML data...</p>
+        </div>
+      )}
 
-        {activeTab === "clusters" && (
-          <ClustersTab 
-            mockCategoryData={mockCategoryData} 
-          />
-        )}
+      {error && (
+        <div className="ml-content-area" style={{ padding: '2rem', color: '#ef4444', fontSize: '0.85rem' }}>
+          Failed to load data: {error}
+        </div>
+      )}
 
-        {activeTab === "patterns" && (
-          <PatternsTab 
-            mockBehaviorPatterns={mockBehaviorPatterns} 
-          />
-        )}
+      {!loading && !error && (
+        <section className="ml-content-area" aria-live="polite">
+          {activeTab === "overview" && (
+            <OverviewTab
+              mockMLMetrics={mlMetricCards}
+              mockPredictionData={mockPredictionData}
+              mockTopFlagged={mockTopFlagged}
+            />
+          )}
 
-        {activeTab === "matrix" && (
-          <MatrixTab 
-            confusionMatrix={CONFUSION_MATRIX} 
-          />
-        )}
+          {activeTab === "clusters" && (
+            <ClustersTab
+              mockCategoryData={mockCategoryData}
+            />
+          )}
 
-        {activeTab === "planner" && (
-          <BudgetTab />
-        )}
-      </section>
+          {activeTab === "patterns" && (
+            <PatternsTab
+              mockBehaviorPatterns={mockBehaviorPatterns}
+            />
+          )}
+
+          {activeTab === "matrix" && (
+            <MatrixTab
+              confusionMatrix={CONFUSION_MATRIX}
+            />
+          )}
+
+          {activeTab === "planner" && (
+            <BudgetTab />
+          )}
+        </section>
+      )}
     </AdminLayout>
   );
 }

@@ -1,13 +1,22 @@
-import { useMLInsights, CLUSTER_DATA } from "../../hooks/usemlinsight";
+import { useMLInsights } from "../../hooks/usemlinsight";
 
 function ClustersTab({ mockCategoryData }) {
   const {
+    clusterData,
     selectedCluster,
     setSelectedCluster,
     maxCluster,
     totalClusters,
-    handleClusterToggle
+    handleClusterToggle,
   } = useMLInsights();
+
+  if (!clusterData.length) {
+    return (
+      <div className="ml-clusters-wrap" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '200px' }}>
+        <p style={{ color: '#64748b', fontSize: '0.9rem' }}>No cluster data available.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="ml-clusters-wrap">
@@ -23,9 +32,9 @@ function ClustersTab({ mockCategoryData }) {
               </p>
             </div>
             {selectedCluster && (
-              <button 
+              <button
                 type="button"
-                className="ml-clear-btn" 
+                className="ml-clear-btn"
                 onClick={() => setSelectedCluster(null)}
                 aria-label="Clear cluster selection"
               >
@@ -35,10 +44,9 @@ function ClustersTab({ mockCategoryData }) {
           </header>
 
           <div className="ml-cluster-bars" role="list" aria-label="Cluster list">
-            {CLUSTER_DATA.map((c, i) => {
-              const isActive = !selectedCluster || selectedCluster.label === c.label;
-              const percentage = ((c.value / totalClusters) * 100).toFixed(1);
-              
+            {clusterData.map((c, i) => {
+              const isActive    = !selectedCluster || selectedCluster.label === c.label;
+              const percentage  = totalClusters > 0 ? ((c.value / totalClusters) * 100).toFixed(1) : '0.0';
               return (
                 <div
                   key={c.label}
@@ -61,7 +69,7 @@ function ClustersTab({ mockCategoryData }) {
                     <div
                       className="ml-cluster-fill"
                       style={{
-                        width: isActive ? `${(c.value / maxCluster) * 100}%` : "0%",
+                        width:   isActive ? `${(c.value / maxCluster) * 100}%` : "0%",
                         background: c.color,
                         opacity: isActive ? 1 : 0.2,
                       }}
@@ -79,23 +87,23 @@ function ClustersTab({ mockCategoryData }) {
                 let cum = 0;
                 const r = 70; const cx = 90; const cy = 90;
                 const circ = 2 * Math.PI * r;
-                return CLUSTER_DATA.map((c) => {
-                  const frac = c.value / totalClusters;
+                return clusterData.map((c) => {
+                  const frac = totalClusters > 0 ? c.value / totalClusters : 0;
                   const dash = frac * circ;
                   const gap  = circ - dash;
                   const off  = circ * (1 - cum);
                   cum += frac;
                   const isActive = !selectedCluster || selectedCluster.label === c.label;
                   return (
-                    <circle 
-                      key={c.label} 
+                    <circle
+                      key={c.label}
                       cx={cx} cy={cy} r={r}
                       fill="none" stroke={c.color} strokeWidth="22"
                       strokeDasharray={`${dash} ${gap}`}
-                      strokeDashoffset={off} 
+                      strokeDashoffset={off}
                       style={{
                         transform: "rotate(-90deg)", transformOrigin: "center",
-                        opacity: isActive ? 1 : 0.2,
+                        opacity:   isActive ? 1 : 0.2,
                         transition: "opacity 0.3s",
                         cursor: "pointer",
                       }}
@@ -152,41 +160,43 @@ function ClustersTab({ mockCategoryData }) {
                 <div className="ml-cluster-stat">
                   <p className="ml-cluster-stat-label">Share</p>
                   <p className="ml-cluster-stat-val" style={{ color: selectedCluster.color }}>
-                    {((selectedCluster.value / totalClusters) * 100).toFixed(1)}%
+                    {totalClusters > 0 ? ((selectedCluster.value / totalClusters) * 100).toFixed(1) : '0.0'}%
                   </p>
                 </div>
                 <div className="ml-cluster-stat">
                   <p className="ml-cluster-stat-label">Risk Level</p>
                   <p className="ml-cluster-stat-val" style={{ color: selectedCluster.color }}>
-                    {selectedCluster.label === "Savers" ? "Low" :
-                      selectedCluster.label === "Balanced" ? "Low-Med" :
-                      selectedCluster.label === "Impulsive" ? "Medium" : "High"}
+                    {selectedCluster.label === "Savers"    ? "Low"     :
+                     selectedCluster.label === "Balanced"  ? "Low-Med" :
+                     selectedCluster.label === "Impulsive" ? "Medium"  : "High"}
                   </p>
                 </div>
               </div>
 
-              <section aria-labelledby="spending-pattern-title">
-                <h4 id="spending-pattern-title" className="ml-cluster-breakdown-title">Typical Spending Pattern</h4>
-                <div className="ml-cluster-breakdown">
-                  {mockCategoryData.map((cat) => {
-                    const multiplier =
-                      selectedCluster.label === "Savers"    ? 0.6 :
-                      selectedCluster.label === "Balanced"  ? 1.0 :
-                      selectedCluster.label === "Impulsive" ? 1.4 : 1.8;
-                    const pct = Math.min(100, ((cat.value * multiplier) / (70000 * multiplier)) * 100);
-                    
-                    return (
-                      <div key={cat.label} className="ml-cluster-cat-row">
-                        <span className="ml-cluster-cat-dot" style={{ background: cat.color }} aria-hidden="true" />
-                        <span className="ml-cluster-cat-name">{cat.label}</span>
-                        <div className="ml-cluster-cat-bar" aria-hidden="true">
-                          <div style={{ width: `${pct}%`, background: cat.color }} className="ml-cluster-cat-fill" />
+              {mockCategoryData.length > 0 && (
+                <section aria-labelledby="spending-pattern-title">
+                  <h4 id="spending-pattern-title" className="ml-cluster-breakdown-title">Typical Spending Pattern</h4>
+                  <div className="ml-cluster-breakdown">
+                    {mockCategoryData.map((cat) => {
+                      const multiplier =
+                        selectedCluster.label === "Savers"    ? 0.6 :
+                        selectedCluster.label === "Balanced"  ? 1.0 :
+                        selectedCluster.label === "Impulsive" ? 1.4 : 1.8;
+                      const maxTotal = Math.max(...mockCategoryData.map(c => c.total));
+                      const pct      = maxTotal > 0 ? Math.min(100, ((cat.total * multiplier) / (maxTotal * multiplier)) * 100) : 0;
+                      return (
+                        <div key={cat.label} className="ml-cluster-cat-row">
+                          <span className="ml-cluster-cat-dot" style={{ background: cat.color ?? '#6366F1' }} aria-hidden="true" />
+                          <span className="ml-cluster-cat-name">{cat.label}</span>
+                          <div className="ml-cluster-cat-bar" aria-hidden="true">
+                            <div style={{ width: `${pct}%`, background: cat.color ?? '#6366F1' }} className="ml-cluster-cat-fill" />
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </section>
+                      );
+                    })}
+                  </div>
+                </section>
+              )}
             </article>
           )}
         </section>
