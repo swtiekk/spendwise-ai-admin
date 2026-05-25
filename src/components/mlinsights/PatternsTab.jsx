@@ -1,12 +1,12 @@
 import { useMLInsights, RISK_CONFIG } from "../../hooks/usemlinsight";
 
-function PatternsTab({ mockBehaviorPatterns }) {
+function PatternsTab() {
   const {
     riskFilter,
     setRiskFilter,
     selectedPattern,
     filteredPatterns,
-    handlePatternToggle
+    handlePatternToggle,
   } = useMLInsights();
 
   return (
@@ -19,7 +19,11 @@ function PatternsTab({ mockBehaviorPatterns }) {
               key={r}
               type="button"
               className={`ml-pattern-filter-btn ${riskFilter === r ? "ml-pattern-filter-btn--active" : ""}`}
-              style={riskFilter === r && r !== "all" ? { background: RISK_CONFIG[r]?.color, borderColor: RISK_CONFIG[r]?.color } : {}}
+              style={
+                riskFilter === r && r !== "all"
+                  ? { background: RISK_CONFIG[r]?.color, borderColor: RISK_CONFIG[r]?.color }
+                  : {}
+              }
               onClick={() => setRiskFilter(r)}
               aria-pressed={riskFilter === r}
             >
@@ -36,7 +40,7 @@ function PatternsTab({ mockBehaviorPatterns }) {
         {filteredPatterns.map((p, i) => {
           const isSelected = selectedPattern?.pattern === p.pattern;
           const config = RISK_CONFIG[p.risk];
-          
+
           return (
             <article
               key={p.pattern}
@@ -45,7 +49,9 @@ function PatternsTab({ mockBehaviorPatterns }) {
               className={`ml-pattern-card ${isSelected ? "ml-pattern-card--selected" : ""}`}
               style={{ animationDelay: `${i * 0.07}s`, cursor: "pointer" }}
               onClick={() => handlePatternToggle(p)}
-              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handlePatternToggle(p); }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') handlePatternToggle(p);
+              }}
               aria-expanded={isSelected}
             >
               <header className="ml-pattern-top">
@@ -57,7 +63,7 @@ function PatternsTab({ mockBehaviorPatterns }) {
               <h4 className="ml-pattern-name">{p.pattern}</h4>
               <p className="ml-pattern-desc">{p.description}</p>
               <div className="ml-pattern-bar" aria-hidden="true">
-                <div 
+                <div
                   className="ml-pattern-bar-fill"
                   style={{ width: `${(p.affected / 50) * 100}%`, background: config.color }}
                 />
@@ -76,12 +82,18 @@ function PatternsTab({ mockBehaviorPatterns }) {
                   <div className="ml-pattern-detail-row">
                     <span>AI Action</span>
                     <strong style={{ color: "#0d9488" }}>
-                      {p.risk === "high" ? "Auto-alert sent" : p.risk === "medium" ? "Advisory queued" : "Monitoring"}
+                      {p.risk === "high"
+                        ? "Auto-alert sent"
+                        : p.risk === "medium"
+                        ? "Advisory queued"
+                        : "Monitoring"}
                     </strong>
                   </div>
                   <div className="ml-pattern-detail-row">
                     <span>Detection Rate</span>
-                    <strong>{p.risk === "high" ? "97%" : p.risk === "medium" ? "91%" : "85%"}</strong>
+                    <strong>
+                      {p.risk === "high" ? "97%" : p.risk === "medium" ? "91%" : "85%"}
+                    </strong>
                   </div>
                 </section>
               )}

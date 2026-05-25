@@ -110,15 +110,16 @@ export const useMLInsights = () => {
   const mockBehaviorPatterns = useMemo(() => {
     if (!mlData) return [];
     return (mlData.category_data ?? []).slice(0, 6).map((cat) => ({
-      pattern:   cat.label,
-      users:     cat.count,
-      avgAmount: cat.count > 0 ? Math.round(cat.total / cat.count) : 0,
-      trend:     cat.total > mlData.avg_income ? 'up' : 'stable',
-      risk:      cat.total > mlData.avg_income * mlData.total_users
-                   ? 'high'
-                   : cat.total > (mlData.avg_income * mlData.total_users * 0.5)
-                   ? 'medium'
-                   : 'low',
+      pattern:     cat.label,
+      affected:    cat.count ?? 0,
+      description: `Users spending heavily on ${cat.label}`,
+      avgAmount:   cat.count > 0 ? Math.round(cat.total / cat.count) : 0,
+      trend:       cat.total > (mlData.avg_income ?? 0) ? 'up' : 'stable',
+      risk: cat.total > (mlData.avg_income ?? 0) * (mlData.total_users ?? 1)
+              ? 'high'
+              : cat.total > (mlData.avg_income ?? 0) * (mlData.total_users ?? 1) * 0.5
+              ? 'medium'
+              : 'low',
     }));
   }, [mlData]);
 

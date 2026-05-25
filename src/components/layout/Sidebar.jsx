@@ -1,15 +1,17 @@
 import { NavLink } from "react-router-dom";
 import useNavigateTo from "../../hooks/useNavigateTo";
+import useLogin from "../../hooks/useLogin";
 
 const navItems = [
-  { to: "/dashboard",   icon: "⊞", label: "Dashboard"  },
-  { to: "/users",       icon: "👥", label: "Users"       },
+  { to: "/dashboard",   icon: "⊞", label: "Dashboard" },
+  { to: "/users",       icon: "👥", label: "Users" },
   { to: "/ml-insights", icon: "🧠", label: "ML Insights" },
-  { to: "/reports",     icon: "📋", label: "Reports"     },
+  { to: "/reports",     icon: "📋", label: "Reports" },
 ];
 
 function Sidebar() {
   const { goTo } = useNavigateTo();
+  const { logout } = useLogin();   // ← Added for proper logout
 
   return (
     <aside className="sidebar" aria-label="Admin sidebar navigation">
@@ -54,10 +56,12 @@ function Sidebar() {
             <p className="sidebar-user-role">Super Admin</p>
           </div>
         </div>
+        
+        {/* Updated Logout Button */}
         <button
           type="button"
           className="sidebar-logout"
-          onClick={() => goTo("/login")}
+          onClick={logout}           // ← Now uses proper logout from hook
           aria-label="Logout"
         >
           ⏻ Logout

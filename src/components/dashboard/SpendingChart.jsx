@@ -1,7 +1,6 @@
-import { mockPredictionData } from "../../data/mockData";
 import useNavigateTo from "../../hooks/useNavigateTo";
 
-function SpendingChart() {
+function SpendingChart({ predictionData = [] }) {
   const { goTo } = useNavigateTo();
 
   const width = 500;
@@ -11,13 +10,13 @@ function SpendingChart() {
   const padT = 16;
   const padB = 24;
 
-  const actualData = mockPredictionData.filter((d) => d.actual);
+  const actualData = predictionData.filter((d) => d.actual);
 
-  const allValues = mockPredictionData.flatMap((d) => [d.actual || 0, d.predicted]);
-  const minVal = Math.min(...allValues.filter(Boolean)) * 0.88;
-  const maxVal = Math.max(...allValues) * 1.06;
+  const allValues = predictionData.flatMap((d) => [d.actual || 0, d.predicted]);
+  const minVal = Math.min(...allValues.filter(Boolean)) * 0.88 || 0;
+  const maxVal = Math.max(...allValues) * 1.06 || 100;
 
-  const xStep = (width - padL - padR) / (mockPredictionData.length - 1);
+  const xStep = (width - padL - padR) / (predictionData.length - 1 || 1);
   const toX = (i) => padL + i * xStep;
   const toY = (v) => padT + (1 - (v - minVal) / (maxVal - minVal)) * (height - padT - padB);
 
@@ -27,7 +26,7 @@ function SpendingChart() {
     for (let i = 1; i < points.length; i++) {
       const prev = points[i - 1];
       const curr = points[i];
-      const cpX  = (prev.x + curr.x) / 2;
+      const cpX = (prev.x + curr.x) / 2;
       d += ` C ${cpX} ${prev.y}, ${cpX} ${curr.y}, ${curr.x} ${curr.y}`;
     }
     return d;
@@ -36,19 +35,19 @@ function SpendingChart() {
   const buildFill = (points) => {
     if (points.length < 2) return "";
     const linePath = buildPath(points);
-    const lastX  = points[points.length - 1].x;
+    const lastX = points[points.length - 1].x;
     const firstX = points[0].x;
     const baseline = height - padB;
     return `${linePath} L ${lastX} ${baseline} L ${firstX} ${baseline} Z`;
   };
 
   const actualPoints = actualData.map((d) => ({
-    x: toX(mockPredictionData.indexOf(d)),
+    x: toX(predictionData.indexOf(d)),
     y: toY(d.actual),
     data: d,
   }));
 
-  const predictedPoints = mockPredictionData.map((d, i) => ({
+  const predictedPoints = predictionData.map((d, i) => ({
     x: toX(i),
     y: toY(d.predicted),
     data: d,
@@ -78,19 +77,19 @@ function SpendingChart() {
         <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" className="db-line-svg">
           <defs>
             <linearGradient id="actualFill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%"   stopColor="#2DD4BF" stopOpacity="0.25" />
+              <stop offset="0%" stopColor="#2DD4BF" stopOpacity="0.25" />
               <stop offset="100%" stopColor="#2DD4BF" stopOpacity="0" />
             </linearGradient>
             <linearGradient id="predictedFill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%"   stopColor="#6366F1" stopOpacity="0.18" />
+              <stop offset="0%" stopColor="#6366F1" stopOpacity="0.18" />
               <stop offset="100%" stopColor="#6366F1" stopOpacity="0" />
             </linearGradient>
             <linearGradient id="actualLine" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%"   stopColor="#2DD4BF" />
+              <stop offset="0%" stopColor="#2DD4BF" />
               <stop offset="100%" stopColor="#0d9488" />
             </linearGradient>
             <linearGradient id="predictedLine" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%"   stopColor="#818cf8" />
+              <stop offset="0%" stopColor="#818cf8" />
               <stop offset="100%" stopColor="#6366F1" />
             </linearGradient>
           </defs>
@@ -99,24 +98,37 @@ function SpendingChart() {
           {[0.25, 0.5, 0.75, 1].map((t) => (
             <line
               key={t}
-              x1={padL} y1={padT + t * (height - padT - padB)}
-              x2={width - padR} y2={padT + t * (height - padT - padB)}
-              stroke="#f1f5f9" strokeWidth="1"
+              x1={padL}
+              y1={padT + t * (height - padT - padB)}
+              x2={width - padR}
+              y2={padT + t * (height - padT - padB)}
+              stroke="#f1f5f9"
+              strokeWidth="1"
             />
           ))}
 
           <path d={buildFill(predictedPoints)} fill="url(#predictedFill)" />
-          <path d={buildFill(actualPoints)}    fill="url(#actualFill)" />
+          <path d={buildFill(actualPoints)} fill="url(#actualFill)" />
 
-          <path d={buildPath(predictedPoints)} fill="none"
-            stroke="url(#predictedLine)" strokeWidth="2"
-            strokeDasharray="5 3" strokeLinecap="round" />
+          <path
+            d={buildPath(predictedPoints)}
+            fill="none"
+            stroke="url(#predictedLine)"
+            strokeWidth="2"
+            strokeDasharray="5 3"
+            strokeLinecap="round"
+          />
 
-          <path d={buildPath(actualPoints)} fill="none"
-            stroke="url(#actualLine)" strokeWidth="2.5"
-            strokeLinecap="round" strokeLinejoin="round" />
+          <path
+            d={buildPath(actualPoints)}
+            fill="none"
+            stroke="url(#actualLine)"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
 
-          {/* FIX: key uses month string — not array index */}
+          {/* Actual points */}
           {actualPoints.map((pt) => (
             <g key={`actual-${pt.data.month}`}>
               <circle cx={pt.x} cy={pt.y} r="5" fill="#fff" stroke="#2DD4BF" strokeWidth="2" />
@@ -124,14 +136,20 @@ function SpendingChart() {
             </g>
           ))}
 
-          {/* FIX: key uses month string — not array index */}
+          {/* Predicted points */}
           {predictedPoints.map((pt) => (
             <g key={`predicted-${pt.data.month}`}>
               {!pt.data.actual ? (
                 <>
-                  <circle cx={pt.x} cy={pt.y} r="6"
-                    fill="rgba(99,102,241,0.15)" stroke="#6366F1"
-                    strokeWidth="1.5" strokeDasharray="3 2" />
+                  <circle
+                    cx={pt.x}
+                    cy={pt.y}
+                    r="6"
+                    fill="rgba(99,102,241,0.15)"
+                    stroke="#6366F1"
+                    strokeWidth="1.5"
+                    strokeDasharray="3 2"
+                  />
                   <circle cx={pt.x} cy={pt.y} r="2.5" fill="#6366F1" />
                 </>
               ) : (
@@ -143,25 +161,36 @@ function SpendingChart() {
             </g>
           ))}
 
-          {/* FIX: key uses month string — not array index */}
-          {mockPredictionData.map((d, i) => (
+          {/* Month labels */}
+          {predictionData.map((d, i) => (
             <text
               key={`label-${d.month}`}
-              x={toX(i)} y={height - 4}
-              textAnchor="middle" fontSize="9"
-              fontFamily="Sora, sans-serif" fontWeight="600"
+              x={toX(i)}
+              y={height - 4}
+              textAnchor="middle"
+              fontSize="9"
+              fontFamily="Sora, sans-serif"
+              fontWeight="600"
               fill={!d.actual ? "#6366F1" : "#94a3b8"}
             >
               {d.month}
             </text>
           ))}
 
+          {/* Forecast label */}
           {(() => {
             const forecastPt = predictedPoints[predictedPoints.length - 1];
+            if (!forecastPt) return null;
             return (
-              <text x={forecastPt.x} y={forecastPt.y - 12}
-                textAnchor="middle" fontSize="7.5"
-                fontFamily="Sora, sans-serif" fontWeight="700" fill="#6366F1">
+              <text
+                x={forecastPt.x}
+                y={forecastPt.y - 12}
+                textAnchor="middle"
+                fontSize="7.5"
+                fontFamily="Sora, sans-serif"
+                fontWeight="700"
+                fill="#6366F1"
+              >
                 forecast
               </text>
             );
@@ -191,7 +220,6 @@ function SpendingChart() {
       </div>
 
       <div className="db-chart-footer">
-        {/* FIX: type="button" added */}
         <button
           type="button"
           className="db-viewmore-btn"
@@ -199,10 +227,18 @@ function SpendingChart() {
           aria-label="View full spending report"
         >
           View Full Report
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" strokeWidth="2.5"
-            strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M5 12h14M12 5l7 7-7 7"/>
+          <svg
+            width="12"
+            height="12"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M5 12h14M12 5l7 7-7 7" />
           </svg>
         </button>
       </div>

@@ -7,7 +7,16 @@ import "../styles/dashboard.css";
 import useDashboard from "../hooks/useDashboard";
 
 function Dashboard() {
-  const { showCharts, setShowCharts, greeting, today, dashData, loading } = useDashboard();
+  const {
+    showCharts,
+    setShowCharts,
+    greeting,
+    today,
+    dashData,
+    categoryData,
+    predictionData,   // ← Added
+    loading,
+  } = useDashboard();
 
   return (
     <AdminLayout>
@@ -61,8 +70,8 @@ function Dashboard() {
         <section aria-label="Spending analytics charts">
           <h2 className="db-section-label">Spending Analytics</h2>
           <div className="db-charts-grid">
-            <SpendingChart />
-            <DonutChart />
+            <SpendingChart predictionData={predictionData} />   {/* ← Updated with live data */}
+            <DonutChart categoryData={categoryData} />
           </div>
         </section>
       )}

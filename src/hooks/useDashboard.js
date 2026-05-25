@@ -4,6 +4,8 @@ import { BASE_URL, getToken } from '../config';
 function useDashboard() {
   const [showCharts, setShowCharts] = useState(true);
   const [dashData,   setDashData]   = useState(null);
+  const [categoryData, setCategoryData] = useState([]);
+  const [predictionData, setPredictionData] = useState([]); // ← New state
   const [loading,    setLoading]    = useState(true);
   const [error,      setError]      = useState('');
 
@@ -12,7 +14,10 @@ function useDashboard() {
     hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
 
   const today = new Date().toLocaleDateString('en-US', {
-    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
   });
 
   useEffect(() => {
@@ -24,17 +29,30 @@ function useDashboard() {
       setLoading(true);
       setError('');
 
-      const res = await fetch(`${BASE_URL}/admin/dashboard`, {
-        headers: { Authorization: `Bearer ${getToken()}` },
-      });
+      const headers = { Authorization: `Bearer ${getToken()}` };
 
-      if (!res.ok) {
-        const err = await res.json();
+      const [dashRes, mlRes] = await Promise.all([
+        fetch(`${BASE_URL}/admin/dashboard`, { headers }),
+        fetch(`${BASE_URL}/admin/ml-insights`, { headers }),
+      ]);
+
+      if (!dashRes.ok) {
+        const err = await dashRes.json().catch(() => ({}));
         throw new Error(err.detail ?? 'Failed to load dashboard.');
       }
 
-      const data = await res.json();
+      const data = await dashRes.json();
       setDashData(data);
+
+      // Extract data from ML insights
+      if (mlRes.ok) {
+        const ml = await mlRes.json();
+        setCategoryData(ml.category_data ?? []);
+        setPredictionData(ml.prediction_data ?? []);   // ← Added
+      } else {
+        setCategoryData([]);
+        setPredictionData([]);
+      }
     } catch (err) {
       console.error('Failed to fetch dashboard:', err);
       setError(err.message);
@@ -44,10 +62,13 @@ function useDashboard() {
   };
 
   return {
-    showCharts, setShowCharts,
+    showCharts,
+    setShowCharts,
     greeting,
     today,
     dashData,
+    categoryData,
+    predictionData,       // ← Added for SpendingChart
     loading,
     error,
     refresh: fetchDashboard,
