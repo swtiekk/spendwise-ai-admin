@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import AdminLayout from "../components/layout/AdminLayout";
 import "../styles/reports.css";
 import jsPDF from "jspdf";
@@ -6,6 +7,8 @@ import autoTable from "jspdf-autotable";
 import { BASE_URL, getToken } from "../config";
 
 function Reports() {
+  const navigate = useNavigate();
+
   const [dateFrom,     setDateFrom]     = useState("");
   const [dateTo,       setDateTo]       = useState("");
   const [exported,     setExported]     = useState(false);
@@ -30,8 +33,8 @@ function Reports() {
         };
 
         const [reportsRes, mlRes] = await Promise.all([
-          fetch(`${BASE_URL}/admin/reports`,      { headers }),
-          fetch(`${BASE_URL}/admin/ml-insights`,  { headers }),
+          fetch(`${BASE_URL}/admin/reports`,     { headers }),
+          fetch(`${BASE_URL}/admin/ml-insights`, { headers }),
         ]);
 
         if (!reportsRes.ok) throw new Error(`Server error: ${reportsRes.status}`);
@@ -40,9 +43,8 @@ function Reports() {
         setAllData(data);
         setFilteredData(data);
 
-        // Build real category breakdown from ml-insights
         if (mlRes.ok) {
-          const ml = await mlRes.json();
+          const ml      = await mlRes.json();
           const catData = ml.category_data ?? [];
           const total   = catData.reduce((s, c) => s + c.total, 0);
           const colors  = ["#2DD4BF", "#6366F1", "#F59E0B", "#1A2B47", "#94a3b8", "#EC4899", "#10B981", "#3B82F6"];
@@ -184,6 +186,42 @@ function Reports() {
   }));
   const maxSpend = Math.max(...chartData.map((d) => d.amount), 1);
 
+  // ── KPI card config ───────────────────────────────────────────────────────
+  const kpiCards = [
+    {
+      label:   "Total Spending",
+      value:   "₱" + totalSpendNum.toLocaleString(),
+      icon:    "₱",
+      color:   "#2DD4BF",
+      bg:      "#f0fdfb",
+      onClick: null,
+    },
+    {
+      label:   "Total Users",
+      value:   totalUsers.toLocaleString(),
+      icon:    "👥",
+      color:   "#6366F1",
+      bg:      "#f5f3ff",
+      onClick: () => navigate("/users"),
+    },
+    {
+      label:   "Total Alerts",
+      value:   totalAlerts.toLocaleString(),
+      icon:    "🔔",
+      color:   "#F59E0B",
+      bg:      "#fffbeb",
+      onClick: null,
+    },
+    {
+      label:   "Total Savings",
+      value:   "₱" + totalSavingsNum.toLocaleString(),
+      icon:    "💰",
+      color:   "#2DD4BF",
+      bg:      "#ecfdf5",
+      onClick: null,
+    },
+  ];
+
   // ── Render ────────────────────────────────────────────────────────────────
   return (
     <AdminLayout>
@@ -271,20 +309,36 @@ function Reports() {
         {/* ── KPI Cards ── */}
         <section aria-label="Summary Statistics">
           <div className="rp-kpi-row">
-            {[
-              { label: "Total Spending", value: "₱" + totalSpendNum.toLocaleString(), icon: "₱",  color: "#2DD4BF", bg: "#f0fdfb" },
-              { label: "Total Users",    value: totalUsers.toLocaleString(),           icon: "👥", color: "#6366F1", bg: "#f5f3ff" },
-              { label: "Total Alerts",   value: totalAlerts.toLocaleString(),          icon: "🔔", color: "#F59E0B", bg: "#fffbeb" },
-              { label: "Total Savings",  value: "₱" + totalSavingsNum.toLocaleString(),icon: "💰", color: "#2DD4BF", bg: "#ecfdf5" },
-            ].map((k) => (
+            {kpiCards.map((k) => (
               <div
                 key={k.label}
                 className="rp-kpi-card"
-                style={{ background: k.bg, borderColor: k.color + "33" }}
+                style={{
+                  background:  k.bg,
+                  borderColor: k.color + "33",
+                  cursor:      k.onClick ? "pointer" : "default",
+                  transition:  "transform 0.15s, box-shadow 0.15s",
+                }}
+                onClick={k.onClick ?? undefined}
+                onMouseEnter={(e) => {
+                  if (k.onClick) {
+                    e.currentTarget.style.transform  = "translateY(-2px)";
+                    e.currentTarget.style.boxShadow  = "0 4px 12px rgba(0,0,0,0.08)";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = "";
+                  e.currentTarget.style.boxShadow = "";
+                }}
               >
                 <div className="rp-kpi-icon" style={{ color: k.color }} aria-hidden="true">{k.icon}</div>
                 <p className="rp-kpi-value" style={{ color: k.color }}>{k.value}</p>
                 <p className="rp-kpi-label">{k.label}</p>
+                {k.onClick && (
+                  <p style={{ fontSize: "0.68rem", color: k.color, opacity: 0.6, marginTop: "4px" }}>
+                    Click to view →
+                  </p>
+                )}
               </div>
             ))}
           </div>

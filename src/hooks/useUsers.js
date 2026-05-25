@@ -38,23 +38,24 @@ export function useUsers() {
     }
   };
 
-  // Note: FastAPI has no deactivate endpoint yet — updates local state only
   const deactivateUser = async (id) => {
     setUsers(prev => prev.map(u =>
       u.id === id ? { ...u, status: 'flagged' } : u
     ));
     setSelected(null);
-    setStatusMessage('User flagged (local only — add DELETE /admin/users/:id to backend to persist).');
+    setStatusMessage('User flagged (local only).');
   };
 
   const exportCSV = () => {
-    const headers = ['UserID', 'Name', 'Email', 'Income Type', 'Income Cycle', 'Date Joined'];
+    const headers = ['UserID', 'Name', 'Email', 'Income Type', 'Income Cycle', 'Cluster', 'Risk Level', 'Date Joined'];
     const rows = users.map(u => [
       u.id,
-      u.name        ?? '',
-      u.email       ?? '',
+      u.name         ?? '',
+      u.email        ?? '',
       u.income_type  ?? 'N/A',
       u.income_cycle ?? 'N/A',
+      u.cluster      ?? 'N/A',
+      u.risk_level   ?? 'N/A',
       u.date_joined  ?? '',
     ]);
     const csv = 'data:text/csv;charset=utf-8,' +
@@ -75,16 +76,16 @@ export function useUsers() {
       const matchSearch =
         (u.name  ?? '').toLowerCase().includes(search.toLowerCase()) ||
         (u.email ?? '').toLowerCase().includes(search.toLowerCase());
-      const matchFilter = filter === 'all' || u.income_type === filter;
+      const matchFilter = filter === 'all' || u.risk_level === filter;
       return matchSearch && matchFilter;
     });
   }, [users, search, filter]);
 
   const counts = useMemo(() => ({
     all:    users.length,
-    salary: users.filter(u => u.income_type === 'salary').length,
-    freelance: users.filter(u => u.income_type === 'freelance').length,
-    other:  users.filter(u => u.income_type === 'other').length,
+    low:    users.filter(u => u.risk_level === 'low').length,
+    medium: users.filter(u => u.risk_level === 'medium').length,
+    high:   users.filter(u => u.risk_level === 'high').length,
   }), [users]);
 
   return {
