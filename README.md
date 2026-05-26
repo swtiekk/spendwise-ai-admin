@@ -35,6 +35,7 @@ Built with React 19 + Vite and deployed on Vercel with SPA routing configured vi
 ![SpendWise AI ERD](docs/ERD.drawio.png)
 
 ## System Architecture
+
 ```
 src/
 ├── pages/
@@ -54,7 +55,7 @@ src/
 └── config.js       – BASE_URL (reads VITE_API_URL), token helpers (getToken, setToken, clearToken)
 ```
 
-![SpendWise AI ERD](docs/system.png)
+![System Architecture](docs/system.png)
 
 All API calls target `/admin/*` endpoints on the FastAPI backend with `Authorization: Bearer <token>`.
 
@@ -65,11 +66,11 @@ All API calls target `/admin/*` endpoints on the FastAPI backend with `Authoriza
 ```bash
 git clone https://github.com/swtiekk/spendwise-ai-admin.git
 cd spendwise-ai-admin
-
 npm install
 ```
 
 Create a `.env` file in the project root:
+
 ```
 VITE_API_URL=http://<your-fastapi-host>:8000
 ```
@@ -82,6 +83,7 @@ npm run dev
 ```
 
 **Production build:**
+
 ```bash
 npm run build
 npm run preview
@@ -98,10 +100,10 @@ npm run preview
 
 ## Team Members and Roles
 
-Sotie Katrina Golez  
-Florie Jayne Soler  
-Trisha Araquil  
-Steve Drylle Sarino  
+- Sotie Katrina Golez
+- Florie Jayne Soler
+- Trisha Araquil
+- Steve Drylle Sarino
 
 ## Known Limitations
 
@@ -112,11 +114,9 @@ Steve Drylle Sarino
 
 ## Screenshots
 
-![Screenshot](docs/1.jpg)
-![Screenshot](docs/2.jpg)
-![Screenshot](docs/3.jpg)
-![Screenshot](docs/4.jpg)
-![Screenshot](docs/5.jpg)
-![Screenshot](docs/6.jpg)
-![Screenshot](docs/7.jpg)
-![Screenshot](docs/8.jpg)
+| | |
+|---|---|
+| ![Screenshot 1](docs/1.png) | ![Screenshot 2](docs/2.png) |
+| ![Screenshot 3](docs/3.png) | ![Screenshot 4](docs/4.png) |
+| ![Screenshot 5](docs/5.png) | ![Screenshot 6](docs/6.png) |
+| ![Screenshot 7](docs/7.png) | ![Screenshot 8](docs/8.png) |
