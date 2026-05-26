@@ -30,23 +30,31 @@ Built with React 19 + Vite and deployed on Vercel with SPA routing configured vi
 | Styling | Plain CSS (per-page stylesheets in `src/styles/`) |
 | Deployment | Vercel (SPA rewrites via `vercel.json`) |
 
+## Entity Relationship Diagram
+
+![SpendWise AI ERD](docs/ERD.drawio.png)
+
 ## System Architecture
+```
 src/
-pages/
-AdminLogin.jsx
-Dashboard.jsx
-Users.jsx
-MLInsights.jsx
-Reports.jsx
-components/
-layout/     – AdminLayout, Sidebar, Header
-dashboard/  – MetricsGrid, SpendingChart, DonutChart, AlertsPanel
-mlinsights/ – OverviewTab, ClustersTab, PatternsTab, BudgetTab, MatrixTab
-ui/         – Button, Badge, Input
-hooks/        – useDashboard, useUsers, usemlinsight, useLogin, useNavigateTo
-routes/       – AppRoutes.jsx
-styles/       – dashboard.css, layout.css, users.css, mlinsights.css, reports.css, forms.css
-config.js     – BASE_URL (reads VITE_API_URL), token helpers (getToken, setToken, clearToken)
+├── pages/
+│   ├── AdminLogin.jsx
+│   ├── Dashboard.jsx
+│   ├── Users.jsx
+│   ├── MLInsights.jsx
+│   └── Reports.jsx
+├── components/
+│   ├── layout/     – AdminLayout, Sidebar, Header
+│   ├── dashboard/  – MetricsGrid, SpendingChart, DonutChart, AlertsPanel
+│   ├── mlinsights/ – OverviewTab, ClustersTab, PatternsTab, BudgetTab, MatrixTab
+│   └── ui/         – Button, Badge, Input
+├── hooks/          – useDashboard, useUsers, usemlinsight, useLogin, useNavigateTo
+├── routes/         – AppRoutes.jsx
+├── styles/         – dashboard.css, layout.css, users.css, mlinsights.css, reports.css, forms.css
+└── config.js       – BASE_URL (reads VITE_API_URL), token helpers (getToken, setToken, clearToken)
+```
+
+![SpendWise AI ERD](docs/system.png)
 
 All API calls target `/admin/*` endpoints on the FastAPI backend with `Authorization: Bearer <token>`.
 
@@ -62,7 +70,9 @@ npm install
 ```
 
 Create a `.env` file in the project root:
+```
 VITE_API_URL=http://<your-fastapi-host>:8000
+```
 
 > If no `.env` is provided, the app defaults to the IP address set in `src/config.js`.
 
@@ -77,7 +87,6 @@ npm run build
 npm run preview
 ```
 
-
 ## Test Account
 
 | Field | Value |
@@ -89,11 +98,10 @@ npm run preview
 
 ## Team Members and Roles
 
-Sotie Katrina Golez
-Florie Jayne Soler
-Trisha Araquil
-Steve Drylle Sarino
-
+Sotie Katrina Golez  
+Florie Jayne Soler  
+Trisha Araquil  
+Steve Drylle Sarino  
 
 ## Known Limitations
 
@@ -101,3 +109,5 @@ Steve Drylle Sarino
 - Charts are custom CSS implementations with limited interactivity (no third-party chart library used)
 - No pagination on the Users table; performance may degrade with large user counts
 - `localStorage` is used for token storage, which is acceptable for an admin tool but should be reviewed for stricter security requirements
+
+## Screenshots
