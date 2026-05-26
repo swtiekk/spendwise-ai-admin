@@ -111,3 +111,12 @@ Steve Drylle Sarino
 - `localStorage` is used for token storage, which is acceptable for an admin tool but should be reviewed for stricter security requirements
 
 ## Screenshots
+
+![Screenshot](docs/1.jpg)
+![Screenshot](docs/2.jpg)
+![Screenshot](docs/3.jpg)
+![Screenshot](docs/4.jpg)
+![Screenshot](docs/5.jpg)
+![Screenshot](docs/6.jpg)
+![Screenshot](docs/7.jpg)
+![Screenshot](docs/8.jpg)
