@@ -2,7 +2,7 @@
 // Use your machine's local IP so both web and mobile can reach FastAPI.
 // 192.168.254.120 is your current machine IP — change this if it ever changes.
 
-export const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://10.75.6.160:8000';
+export const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://10.146.81.160:8000';
 
 const TOKEN_KEY = 'spendwise_admin_token';
 
