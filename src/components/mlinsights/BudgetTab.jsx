@@ -10,7 +10,8 @@ const BudgetTab = () => {
     toggleDayExpansion,
     parseCurrency,
     formatCurrency,
-    dailyLog
+    dailyLog,
+    dailyLoading,          // ← Added
   } = useMLInsights();
 
   const SR_ONLY_STYLE = {
@@ -156,12 +157,19 @@ const BudgetTab = () => {
           </div>
         </header>
 
-        <section className="pt-daily-grid">
-          <h2 style={SR_ONLY_STYLE}>Daily Activity History</h2>
-          {dailyLog.map((log) => (
-            <DayCard key={log.day} log={log} />
-          ))}
-        </section>
+        {/* Daily Activity with Loading State */}
+        {dailyLoading ? (
+          <p style={{ padding: '2rem', color: '#64748b', textAlign: 'center' }}>
+            Loading daily activity...
+          </p>
+        ) : (
+          <section className="pt-daily-grid">
+            <h2 style={SR_ONLY_STYLE}>Daily Activity History</h2>
+            {dailyLog.map((log) => (
+              <DayCard key={log.day} log={log} />
+            ))}
+          </section>
+        )}
       </main>
     );
   }

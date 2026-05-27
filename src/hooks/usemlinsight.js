@@ -44,6 +44,15 @@ export const useMLInsights = () => {
   const [loading,     setLoading]     = useState(false);
   const [error,       setError]       = useState('');
 
+  // ── Budget tab state (must be declared early) ──────────────────────────────
+  const [selectedUser,  setSelectedUser]  = useState(null);
+  const [expandedDays,  setExpandedDays]  = useState({});
+
+  // ── Daily expenses state ───────────────────────────────────────────────────
+  const [dailyExpenses, setDailyExpenses] = useState({});
+  const [dailyLoading,  setDailyLoading]  = useState(false);
+
+  // ── Fetch initial data ─────────────────────────────────────────────────────
   useEffect(() => {
     const fetchAll = async () => {
       setLoading(true);
@@ -83,6 +92,33 @@ export const useMLInsights = () => {
     };
     fetchAll();
   }, []);
+
+  // ── Fetch daily expenses when user is selected ─────────────────────────────
+  useEffect(() => {
+    if (!selectedUser) {
+      setDailyExpenses({});
+      return;
+    }
+
+    const fetchDaily = async () => {
+      setDailyLoading(true);
+      try {
+        const res = await fetch(
+          `${BASE_URL}/admin/users/${selectedUser.id}/expenses`,
+          { headers: { Authorization: `Bearer ${getToken()}` } }
+        );
+        if (!res.ok) return;
+        const data = await res.json();
+        setDailyExpenses(data.daily_expenses ?? {});
+      } catch (err) {
+        console.error('Failed to fetch daily expenses:', err);
+      } finally {
+        setDailyLoading(false);
+      }
+    };
+
+    fetchDaily();
+  }, [selectedUser]);
 
   // ── Derived data from API ──────────────────────────────────────────────────
   const mockMLMetrics = useMemo(() => {
@@ -188,10 +224,7 @@ export const useMLInsights = () => {
     { label: 'F1 Score',  value: '90.7%',           color: '#1A2B47', desc: 'Balance between precision and recall',        formula: '2×(P×R)/(P+R)'   },
   ], [cmAccuracy]);
 
-  // ── Budget tab ─────────────────────────────────────────────────────────────
-  const [selectedUser,  setSelectedUser]  = useState(null);
-  const [expandedDays,  setExpandedDays]  = useState({});
-
+  // ── Budget tab helpers ─────────────────────────────────────────────────────
   const toggleDayExpansion = useCallback((day) => {
     setExpandedDays(prev => ({ ...prev, [day]: !prev[day] }));
   }, []);
@@ -206,95 +239,43 @@ export const useMLInsights = () => {
     new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(val),
   []);
 
+  // Real dailyLog using fetched daily expenses
   const dailyLog = useMemo(() => {
     if (!selectedUser) return [];
 
-    const monthlyBudget        = parseCurrency(selectedUser.income);
-    const totalActualSpent     = parseCurrency(selectedUser.spent);
-    const transactionDaysCount = Math.min(selectedUser.transactions || 20, 30);
-
-    const dayIndices              = Array.from({ length: 30 }, (_, i) => i);
-    const dailyActualSpentAmounts = new Array(30).fill(0);
-
-    for (let i = dayIndices.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [dayIndices[i], dayIndices[j]] = [dayIndices[j], dayIndices[i]];
-    }
-
-    let remainingToDistribute = totalActualSpent;
-    const activeDayIndices    = dayIndices.slice(0, transactionDaysCount);
-    activeDayIndices.sort((a, b) => a - b);
-    const avgDailySpend = totalActualSpent / transactionDaysCount;
-
-    activeDayIndices.forEach((idx, i) => {
-      if (i === activeDayIndices.length - 1) {
-        dailyActualSpentAmounts[idx] = remainingToDistribute;
-      } else {
-        const amount      = Math.round(avgDailySpend * (0.6 + Math.random() * 0.8));
-        const finalAmount = Math.min(amount, remainingToDistribute);
-        dailyActualSpentAmounts[idx] = finalAmount;
-        remainingToDistribute -= finalAmount;
-      }
-    });
-
+    const income = parseCurrency(selectedUser.income);
     let runningSpent = 0;
 
     return Array.from({ length: 30 }, (_, i) => {
-      const day         = i + 1;
-      const targetSpend = dailyActualSpentAmounts[i];
-      const transactions = [];
-      let   dayActualTotal = 0;
+      const day = i + 1;
+      const rawTransactions = dailyExpenses[String(day)] ?? [];
 
-      if (targetSpend > 0) {
-        const itemCount = Math.floor(Math.random() * 2) + 1;
-        let   remainingInDay = targetSpend;
+      const transactions = rawTransactions.map((tx, j) => {
+        const wouldExceed = (runningSpent + tx.price) > income;
+        return {
+          id:       `day${day}-${j}`,
+          name:     tx.name,
+          category: tx.category,
+          icon:     tx.icon,
+          price:    tx.price,
+          verdict:  wouldExceed ? 'NO' : 'YES',
+          followed: true,
+          isSaving: false,
+        };
+      });
 
-        for (let j = 0; j < itemCount; j++) {
-          const itemTemplate   = ITEM_POOL[Math.floor(Math.random() * ITEM_POOL.length)];
-          const price          = (j === itemCount - 1) ? remainingInDay : Math.round((targetSpend / itemCount) * (0.8 + Math.random() * 0.4));
-          remainingInDay      -= price;
-
-          const isInsufficient = (runningSpent + price) > monthlyBudget;
-          let verdict  = 'YES';
-          let followed = true;
-
-          if (isInsufficient) {
-            verdict  = 'NO';
-            followed = false;
-          } else {
-            const isNo = Math.random() > (selectedUser.spendingScore / 100) + 0.2;
-            verdict  = isNo ? 'NO' : 'YES';
-            followed = !isNo;
-          }
-
-          transactions.push({ id: `day${day}-spend-${j}`, ...itemTemplate, price, verdict, followed, isSaving: false });
-          runningSpent   += price;
-          dayActualTotal += price;
-        }
-      }
-
-      const savingsCount = Math.floor(Math.random() * 2);
-      for (let s = 0; s < savingsCount; s++) {
-        const itemTemplate   = ITEM_POOL[Math.floor(Math.random() * ITEM_POOL.length)];
-        const price          = Math.round(avgDailySpend * (0.3 + Math.random() * 0.7));
-        const isInsufficient = (runningSpent + price) > monthlyBudget;
-        const verdict        = isInsufficient ? 'NO' : (Math.random() > 0.5 ? 'NO' : 'YES');
-        if (verdict === 'NO') {
-          transactions.push({ id: `day${day}-save-${s}`, ...itemTemplate, price, verdict: 'NO', followed: true, isSaving: true });
-        }
-      }
-
-      transactions.sort(() => Math.random() - 0.5);
+      const dayTotal = transactions.reduce((s, tx) => s + tx.price, 0);
+      runningSpent += dayTotal;
 
       return {
         day,
         hasActivity:     transactions.length > 0,
         transactions,
-        dayTotal:        dayActualTotal,
-        remainingBudget: monthlyBudget - runningSpent,
+        dayTotal,
+        remainingBudget: income - runningSpent,
       };
     });
-  }, [selectedUser, parseCurrency]);
+  }, [selectedUser, dailyExpenses, parseCurrency]);
 
   // ── Return ─────────────────────────────────────────────────────────────────
   return {
@@ -308,27 +289,37 @@ export const useMLInsights = () => {
     mockCategoryData,
     mockUsers,
     clusterData,
-    activeTab, setActiveTab,
+    activeTab, 
+    setActiveTab,
     cmAccuracy,
     tabs,
-    selectedBar, setSelectedBar,
-    hoveredBar,  setHoveredBar,
+    selectedBar, 
+    setSelectedBar,
+    hoveredBar,  
+    setHoveredBar,
     maxPredicted,
-    selectedCluster, setSelectedCluster,
-    maxCluster, totalClusters,
+    selectedCluster, 
+    setSelectedCluster,
+    maxCluster, 
+    totalClusters,
     handleClusterToggle,
-    riskFilter,      setRiskFilter,
-    selectedPattern, setSelectedPattern,
+    riskFilter,      
+    setRiskFilter,
+    selectedPattern, 
+    setSelectedPattern,
     filteredPatterns,
     handlePatternToggle,
     cmTotal,
     performanceMetrics,
-    selectedUser, setSelectedUser,
+    selectedUser, 
+    setSelectedUser,
     expandedDays,
     toggleDayExpansion,
     parseCurrency,
     formatCurrency,
     dailyLog,
+    dailyExpenses,
+    dailyLoading,
   };
 };
 

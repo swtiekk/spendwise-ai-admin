@@ -166,9 +166,10 @@ function ClustersTab({ mockCategoryData }) {
                 <div className="ml-cluster-stat">
                   <p className="ml-cluster-stat-label">Risk Level</p>
                   <p className="ml-cluster-stat-val" style={{ color: selectedCluster.color }}>
-                    {selectedCluster.label === "Savers"    ? "Low"     :
-                     selectedCluster.label === "Balanced"  ? "Low-Med" :
-                     selectedCluster.label === "Impulsive" ? "Medium"  : "High"}
+                    {selectedCluster.label === "Savers"    ? "Low"      :
+                     selectedCluster.label === "Balanced"  ? "Low-Med"  :
+                     selectedCluster.label === "Impulsive" ? "Medium"   :
+                     selectedCluster.label === "At-Risk"   ? "High"     : "High"}
                   </p>
                 </div>
               </div>
