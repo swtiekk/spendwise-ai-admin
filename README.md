@@ -89,14 +89,8 @@ npm run build
 npm run preview
 ```
 
-## Test Account
-
-| Field | Value |
-|---|---|
-| Username | admin |
-| Password | admin123 |
-
-> The account must have `is_admin = True` in the backend database.
+## Deployment Link
+https://spendwise-ai-admin-indol.vercel.app/login?fbclid=IwY2xjawSD0LRleHRuA2FlbQIxMABicmlkETFzTUttTUxnSTFURmdWWUI1c3J0YwZhcHBfaWQQMjIyMDM5MTc4ODIwMDg5MgABHkT10r9Kn2gDFVo-Rj9oYvglb9YiBL2qtNaKoh0q8ffi6pGpAsf3Kaxm3rYR_aem_-fVHskU_K39s8sjNxXhydQ
 
 ## Team Members and Roles
 
